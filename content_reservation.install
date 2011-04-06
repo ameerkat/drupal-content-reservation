@@ -1,5 +1,5 @@
 <?php
-function content-reservation_schema() {
+function content_reservation_schema() {
 	// Specifications for content-reservation table
 	$schema['content_reservation'] = array(
 		'description' => t('Content reservation info.'),
@@ -18,39 +18,36 @@ function content-reservation_schema() {
 				'default'		=> 0),
 		'description' => array(
 				'description'	=> t('Purpose of the reservation or additional comments.'),
+				'length'		=> 4095,
 				'type'			=> 'text',
 				'not null'		=> FALSE),
 		'start' => array(
 				'description'	=> t('Start DateTime of reservation'),
 				'type'			=> 'datetime',
-				'not null'		=> TRUE,
-				'default'		=> 0)
+				'not null'		=> FALSE),
 		'end' => array(
 				'description'	=> t('End DateTime of reservation'),
 				'type'			=> 'datetime',
-				'not null'		=> TRUE,
-				'default'		=> 0)
+				'not null'		=> FALSE),
 		'created' => array(
 				'description'	=> t('DateTime the reservation was created.'),
 				'type'			=> 'datetime',
-				'not null'		=> TRUE,
-				'default'		=> 0)
+				'not null'		=> FALSE),
 		'modified' => array(
 				'description'	=> t('DateTime the reservation was last updated.'),
 				'type'			=> 'datetime',
-				'not null'		=> TRUE,
-				'default'		=> 0)
+				'not null'		=> FALSE)
 		),
-		'primary key' => array('nid', 'start'),
+		'primary key' => array('nid'),
 	);
 	
 	return $schema;
 }
 
-function content-reservation_install() {
+function content_reservation_install() {
 	drupal_install_schema('content_reservation');
 }
 
-function content-reservation_uninstall() {
+function content_reservation_uninstall() {
 	drupal_uninstall_schema('content_reservation');
 }

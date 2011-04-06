@@ -1,0 +1,28 @@
+/**
+ * Implementation of hook_perm()
+ */
+function content_reservation_perm(){
+	return array('view reservations', 'make reservations', 'modify reservations');
+}
+
+/**
+ * Lists all the content that is reservable
+ */
+function content_reservation_list($content_type='page'){
+	echo "test";
+}
+
+/**
+ * Implementation of hook_menu()
+ */
+function content_reservation_menu() {
+	$items = array();
+	$items['reservations'] = array(
+		'title' => 'Reservations',
+		'description' => 'Set profile field names, api key, and cache settings for the sc2ranks module.',
+		'page callback' => 'content_reservation_list',
+		'access arguments' => array('view reservation'),
+		'type' => MENU_NORMAL_ITEM,
+	);
+	return $items;
+}
