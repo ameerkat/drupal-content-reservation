@@ -2,5 +2,5 @@
 name = "Content Reservation"
 description = "Enables content to be reservable by users."
 core = 6.x
-version = 6.x-0.03
+version = 6.x-0.04
 package = "ASU"

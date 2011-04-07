@@ -1,3 +1,4 @@
+<?php
 /**
  * Implementation of hook_perm()
  */
@@ -6,10 +7,66 @@ function content_reservation_perm(){
 }
 
 /**
- * Lists all the content that is reservable
+ * Implementation of preprocess_theme_hook()
  */
-function content_reservation_list($content_type='page'){
-	echo "test";
+function template_preprocess_content_reservation_list(&$variables){
+	// Just pass for now
+}
+
+/**
+ * Implementation of hook_theme()
+ */
+function content_reservation_theme() {
+	return array(
+		'content_reservation_list' => array(
+			'template' => 'content_reservation_list',
+			'arguments' => array('content_list' => NULL),
+		),
+	);
+}
+
+/**
+ * Helper function that gets human readable node type name from machine readable name
+ */
+function get_readable_content_type($machine_type_name){
+	$result = db_query("SELECT * FROM {node_type} WHERE type = '%s'",  $machine_type_name);
+	$row = db_fetch_object($result);
+	if($row){
+		return $row->name;
+	} else {
+		return NULL;
+	}
+}
+
+/**
+ * Reservable content list page callback
+ */
+function content_reservation_reserve($content_type = NULL, $content_id = NULL){
+	if($content_type && !$content_id){
+		// There is no content id passed in so we just display the default
+		// content reservation list
+		global $base_url;
+		$content_list = array();
+		$result = db_query("SELECT * FROM {node} WHERE type = '%s'",  $content_type);
+		while ($row = db_fetch_object($result)) {
+			$row->reservation_url = $base_url."/reservations/".$content_type."/".$row->nid;
+			$content_list[] = $row;
+		}
+		if(!empty($content_list)){
+			$content_name = get_readable_content_type($content_type);
+			if($content_name){
+				drupal_set_title($content_name." Reservations");
+			}
+			return theme("content_reservation_list", $content_list);
+		} else {
+			return "No content found for this content type";
+		}
+	} elseif ($content_type && $content_id) {
+		// We got a content id so we want to reserve that content
+		return "";
+	} else {
+		return "No content type specified";
+	}
 }
 
 /**
@@ -19,8 +76,8 @@ function content_reservation_menu() {
 	$items = array();
 	$items['reservations'] = array(
 		'title' => 'Reservations',
-		'description' => 'Set profile field names, api key, and cache settings for the sc2ranks module.',
-		'page callback' => 'content_reservation_list',
+		'description' => 'Lists reservable content',
+		'page callback' => 'content_reservation_reserve',
 		'access arguments' => array('view reservation'),
 		'type' => MENU_NORMAL_ITEM,
 	);

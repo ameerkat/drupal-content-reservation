@@ -4,6 +4,12 @@ function content_reservation_schema() {
 	$schema['content_reservation'] = array(
 		'description' => t('Content reservation info.'),
 		'fields' => array(
+		'rid' => array(
+				'description'	=> t('Unique reservation id'),
+				'type'			=> 'int',
+				'unsigned'		=> TRUE,
+				'not null'		=> TRUE,
+				'default'		=> 0),
 		'nid' => array(
 				'description'	=> t('The {node} this data is related to.'),
 				'type'			=> 'int',
@@ -38,7 +44,7 @@ function content_reservation_schema() {
 				'type'			=> 'datetime',
 				'not null'		=> FALSE)
 		),
-		'primary key' => array('nid'),
+		'primary key' => array('rid'),
 	);
 	
 	return $schema;
