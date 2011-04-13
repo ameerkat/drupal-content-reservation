@@ -3,7 +3,7 @@
  * Implementation of hook_perm()
  */
 function content_reservation_perm(){
-	return array('view reservations', 'make reservations', 'modify reservations');
+	return array('view reservations', 'make reservations', 'modify reservations', 'administer reservation');
 }
 
 /**
@@ -62,11 +62,48 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 			return "No content found for this content type";
 		}
 	} elseif ($content_type && $content_id) {
-		// We got a content id so we want to reserve that content
-		return "";
+		return drupal_get_form('content_reservation_reservation_form');
 	} else {
 		return "No content type specified";
 	}
+}
+
+/**
+ * Implementation of the reservation form
+ */
+function content_reservation_reservation_form(){
+	$form['div_tag'] = array(
+		'#type' => 'markup',
+		'#value' => '<div class="reservation_form">');
+	$form['start'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('From'));
+	$form['start']['start_date'] = array(
+		'#type' => 'textfield',
+		'#attributes' => array('class' => 'calendricalDateClass'),
+		'#description' => t('Start Date'));
+	$form['start']['start_time'] = array(
+		'#type' => 'textfield',
+		'#attributes' => array('class' => 'calendricalTimeClass'),
+		'#description' => t('State Time'));
+	$form['end'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('To'));
+	$form['end']['end_date'] = array(
+		'#type' => 'textfield',
+		'#attributes' => array('class' => 'calendricalDateClass'),
+		'#description' => t('End Date'));
+	$form['end']['end_time'] = array(
+		'#type' => 'textfield',
+		'#attributes' => array('class' => 'calendricalTimeClass'),
+		'#description' => t('End Time'));
+	$form['description'] = array(
+		'#type' => 'textarea',
+		'#description' => t('Reservation Purpose'));
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Submit'));
+	return $form;
 }
 
 /**
