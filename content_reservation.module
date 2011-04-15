@@ -62,6 +62,10 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 			return "No content found for this content type";
 		}
 	} elseif ($content_type && $content_id) {
+		drupal_add_css(drupal_get_path('module', 'content_reservation') .'/lib/jquery-calendrical/calendrical.css', $type = 'module');
+		drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
+		drupal_add_js(drupal_get_path('module', 'content_reservation') .'/lib/jquery-calendrical/jquery.calendrical.js');
+		drupal_add_js(drupal_get_path('module', 'content_reservation') .'/content-reservation-make_calendrical.js');
 		return drupal_get_form('content_reservation_reservation_form');
 	} else {
 		return "No content type specified";
@@ -77,29 +81,35 @@ function content_reservation_reservation_form(){
 		'#value' => '<div class="reservation_form">');
 	$form['start'] = array(
 		'#type' => 'fieldset',
+		'#attributes' => array('id' => 'startFieldset'),
 		'#title' => t('From'));
 	$form['start']['start_date'] = array(
 		'#type' => 'textfield',
 		'#attributes' => array('class' => 'calendricalDateClass'),
-		'#description' => t('Start Date'));
+		'#size' => 20,
+		'#description' => t('Start Date [dd/mm/yyyy]'));
 	$form['start']['start_time'] = array(
 		'#type' => 'textfield',
 		'#attributes' => array('class' => 'calendricalTimeClass'),
-		'#description' => t('State Time'));
+		'#size' => 20,
+		'#description' => t('State Time [hh:mm(am/pm)]'));
 	$form['end'] = array(
 		'#type' => 'fieldset',
+		'#attributes' => array('id' => 'endFieldset'),
 		'#title' => t('To'));
 	$form['end']['end_date'] = array(
 		'#type' => 'textfield',
 		'#attributes' => array('class' => 'calendricalDateClass'),
-		'#description' => t('End Date'));
+		'#size' => 20,
+		'#description' => t('End Date [dd/mm/yyyy]'));
 	$form['end']['end_time'] = array(
 		'#type' => 'textfield',
 		'#attributes' => array('class' => 'calendricalTimeClass'),
-		'#description' => t('End Time'));
+		'#size' => 20,
+		'#description' => t('End Time [hh:mm(am/pm)]'));
 	$form['description'] = array(
 		'#type' => 'textarea',
-		'#description' => t('Reservation Purpose'));
+		'#description' => t('Short description of reservation purpose'));
 	$form['submit'] = array(
 		'#type' => 'submit',
 		'#value' => t('Submit'));

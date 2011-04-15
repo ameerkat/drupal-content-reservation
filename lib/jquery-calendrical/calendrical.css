@@ -3,12 +3,14 @@
   border: solid 1px #999999;
   padding: 2px;
   text-align: center;
-  width: 160px; }
+  width: 160px;
+  }
   .calendricalDatePopup table {
-    border-collapse: collapse;
+    margin-top: 0px;
+	border-collapse: collapse;
     width: 160px; }
     .calendricalDatePopup table .monthCell {
-      padding: 2px 0; }
+      padding: 2px 0px; }
       .calendricalDatePopup table .monthCell a {
         display: block;
         float: left;
@@ -22,7 +24,7 @@
     .calendricalDatePopup table td {
       text-align: center;
       font-size: 12px;
-      padding: 0; }
+      padding: 0px; }
       .calendricalDatePopup table td a {
         display: block;
         color: black;
@@ -49,11 +51,15 @@
   height: 130px;
   overflow: auto; }
   .calendricalTimePopup ul {
-    margin: 0;
-    padding: 0; }
+    margin: 0px;
+    padding: 0px; }
     .calendricalTimePopup ul li {
       list-style: none;
-      margin: 0; }
+	  list-style-type: none;
+	  list-style-image: none;
+	  background-image: none;
+	  padding: 0px;
+      margin: 0px; }
       .calendricalTimePopup ul li a, .calendricalTimePopup ul li a:visited {
         text-indent: 10px;
         padding: 4px;
