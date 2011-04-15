@@ -62,10 +62,7 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 			return "No content found for this content type";
 		}
 	} elseif ($content_type && $content_id) {
-		drupal_add_css(drupal_get_path('module', 'content_reservation') .'/lib/jquery-calendrical/calendrical.css', $type = 'module');
 		drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
-		drupal_add_js(drupal_get_path('module', 'content_reservation') .'/lib/jquery-calendrical/jquery.calendrical.js');
-		drupal_add_js(drupal_get_path('module', 'content_reservation') .'/content-reservation-make_calendrical.js');
 		return drupal_get_form('content_reservation_reservation_form');
 	} else {
 		return "No content type specified";
@@ -76,37 +73,22 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
  * Implementation of the reservation form
  */
 function content_reservation_reservation_form(){
+	//include_once(drupal_get_path('module', 'date_api').'/date.inc');
 	$form['div_tag'] = array(
 		'#type' => 'markup',
 		'#value' => '<div class="reservation_form">');
 	$form['start'] = array(
-		'#type' => 'fieldset',
-		'#attributes' => array('id' => 'startFieldset'),
-		'#title' => t('From'));
-	$form['start']['start_date'] = array(
-		'#type' => 'textfield',
-		'#attributes' => array('class' => 'calendricalDateClass'),
-		'#size' => 20,
-		'#description' => t('Start Date [dd/mm/yyyy]'));
-	$form['start']['start_time'] = array(
-		'#type' => 'textfield',
-		'#attributes' => array('class' => 'calendricalTimeClass'),
-		'#size' => 20,
-		'#description' => t('State Time [hh:mm(am/pm)]'));
+		'#type' => 'date_select',
+		'#title' => t('From'),
+		'#date_format' => 'm/d/Y - H:i',
+		'#date_year_range' => '0:+1',
+	);
 	$form['end'] = array(
-		'#type' => 'fieldset',
-		'#attributes' => array('id' => 'endFieldset'),
-		'#title' => t('To'));
-	$form['end']['end_date'] = array(
-		'#type' => 'textfield',
-		'#attributes' => array('class' => 'calendricalDateClass'),
-		'#size' => 20,
-		'#description' => t('End Date [dd/mm/yyyy]'));
-	$form['end']['end_time'] = array(
-		'#type' => 'textfield',
-		'#attributes' => array('class' => 'calendricalTimeClass'),
-		'#size' => 20,
-		'#description' => t('End Time [hh:mm(am/pm)]'));
+		'#type' => 'date_select',
+		'#title' => t('To'),
+		'#date_format' => 'm/d/Y - H:i',
+		'#date_year_range' => '0:+1',
+	);
 	$form['description'] = array(
 		'#type' => 'textarea',
 		'#description' => t('Short description of reservation purpose'));

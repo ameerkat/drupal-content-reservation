@@ -1,6 +1,10 @@
 ; $Id$
 name = "Content Reservation"
 description = "Enables content to be reservable by users."
+dependencies[] = date
+dependencies[] = date_popup
+dependencies[] = jquery_ui
+dependencies[] = date_api
 core = 6.x
-version = 6.x-0.04
+version = 6.x-0.07
 package = "ASU"
