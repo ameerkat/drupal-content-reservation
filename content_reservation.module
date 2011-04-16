@@ -63,7 +63,7 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 		}
 	} elseif ($content_type && $content_id) {
 		drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
-		return drupal_get_form('content_reservation_reservation_form');
+		return drupal_get_form('content_reservation_reservation_form', $content_id);
 	} else {
 		return "No content type specified";
 	}
@@ -72,7 +72,7 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 /**
  * Implementation of the reservation form
  */
-function content_reservation_reservation_form(){
+function content_reservation_reservation_form($form_state, $content_id){
 	//include_once(drupal_get_path('module', 'date_api').'/date.inc');
 	$form['div_tag'] = array(
 		'#type' => 'markup',
@@ -92,10 +92,28 @@ function content_reservation_reservation_form(){
 	$form['description'] = array(
 		'#type' => 'textarea',
 		'#description' => t('Short description of reservation purpose'));
+	$form['node_id'] = array(
+		'#type' => 'value',
+		'#value' => $content_id);
 	$form['submit'] = array(
 		'#type' => 'submit',
-		'#value' => t('Submit'));
+		'#value' => t('Submit'),
+		'#submit' => array('content_reservation_reservation_form_submit'));
 	return $form;
+}
+
+/**
+ * Implementation of the form processor
+ */
+function content_reservation_reservation_form_submit($form, &$form_state){
+	//drupal_set_message(print_r($form_state['values']['node_id'], $return = true));
+	drupal_set_message(print_r($form_state, true));
+	
+	/*if(isset($form_state['values']['start']) &&
+		isset($form_state['values']['end'])){
+		db_query("INSERT INTO {content_reservation} (nid, uid, description, start, end, created, modified) VALUES (%d, %d, '%s', '%s', '%s', NOW(), NOW())", $form_state['values']['']['name'], $form_state['values']['rate']['description']);
+		drupal_set_message('Your reservation has been added.');
+	}*/
 }
 
 /**
