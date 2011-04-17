@@ -39,10 +39,18 @@ function generate_fullcalendar_js($even_json){
 	
 }
 
+function render_calendar_div(){
+	return "<div id=\"content_reservation-fullCalendar\"></div>";
+}
+
 /**
  * Reservable content list page callback
  */
 function content_reservation_reserve($content_type = NULL, $content_id = NULL){
+	drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
+	drupal_add_js(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/jquery/jquery-1.5.min.js');
+	drupal_add_css(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/fullcalendar/fullcalendar.css');
+	drupal_add_js(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/fullcalendar/fullcalendar.js');
 	if($content_type && !$content_id){
 		// There is no content id passed in so we just display the default
 		// content reservation list
@@ -59,11 +67,6 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 				drupal_set_title("Available ".$content_name." Reservations");
 			}
 			$event_list_json = content_reservation_json("type", $content_type);
-			drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
-			drupal_add_js(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/jquery/jquery-1.5.min.js');
-			drupal_add_css(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/fullcalendar/fullcalendar.css');
-			//drupal_add_css(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/fullcalendar/fullcalendar.print.css');
-			drupal_add_js(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/fullcalendar/fullcalendar.js');
 			drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
 			return theme("content_reservation_list", $content_list);
 		} else {
@@ -72,7 +75,11 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 	} elseif ($content_type && $content_id) {
 		// TODO Check to see if the actual content_id exists + Print out name
 		drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
-		return drupal_get_form('content_reservation_reservation_form', $content_id);
+		$event_list_json = content_reservation_json("nid", $content_id);
+		drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
+		$to_return = drupal_get_form('content_reservation_reservation_form', $content_id);
+		$to_return .= render_calendar_div();
+		return $to_return;
 	} else {
 		return "No content type specified";
 	}
