@@ -6,10 +6,7 @@ function content_reservation_schema() {
 		'fields' => array(
 		'rid' => array(
 				'description'	=> t('Unique reservation id'),
-				'type'			=> 'int',
-				'unsigned'		=> TRUE,
-				'not null'		=> TRUE,
-				'default'		=> 0),
+				'type'			=> 'serial'),
 		'nid' => array(
 				'description'	=> t('The {node} this data is related to.'),
 				'type'			=> 'int',

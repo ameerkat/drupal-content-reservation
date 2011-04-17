@@ -49,7 +49,7 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 		$content_list = array();
 		$result = db_query("SELECT * FROM {node} WHERE type = '%s'",  $content_type);
 		while ($row = db_fetch_object($result)) {
-			$row->reservation_url = $base_url."/reservations/".$content_type."/".$row->nid;
+			$row->reservation_url = $base_url."/reservations/r/".$content_type."/".$row->nid;
 			$content_list[] = $row;
 		}
 		if(!empty($content_list)){
@@ -62,6 +62,7 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 			return "No content found for this content type";
 		}
 	} elseif ($content_type && $content_id) {
+		// TODO Check to see if the actual content_id exists + Print out name
 		drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
 		return drupal_get_form('content_reservation_reservation_form', $content_id);
 	} else {
@@ -73,7 +74,6 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
  * Implementation of the reservation form
  */
 function content_reservation_reservation_form($form_state, $content_id){
-	//include_once(drupal_get_path('module', 'date_api').'/date.inc');
 	$form['div_tag'] = array(
 		'#type' => 'markup',
 		'#value' => '<div class="reservation_form">');
@@ -103,7 +103,69 @@ function content_reservation_reservation_form($form_state, $content_id){
 }
 
 /**
- * Implementation of the form processor
+* Event type definition
+*/
+class FullcalendarEvent{
+	public $id;
+	public $title;
+	public $start;
+	public $end;
+	public $url;
+	public $color;
+	public $textColor;
+}
+ 
+/**
+* Event type wrapper class
+*/
+class FullcalendarEventList{
+	public $events;
+	public $error;
+}
+
+/**
+ * Returns reservation 'events' from the database
+ */
+function content_reservation_json($query_type, $query_key){
+	// JSON Error Codes
+	$ERR_NO_CONTENT_FOUND = "Query did not return any content.";
+	
+	if ($query_type == 'type'){
+		$result = db_query("SELECT * FROM {content_reservation}, {node} WHERE {node}.nid = {content_reservation}.nid AND {node}.type = '%s'",  $query_key);
+		$event_list = Array();
+		while ($row = db_fetch_object($result)) {
+		// TODO replace this with actual color variable depending on type
+			$default_color = "#004f45";
+			$default_textColor = "#ffffff";
+			$event = new FullcalendarEvent();
+			$event->id = $row->rid;
+			$event->title = $row->description;
+			// Convert these times to readable format by fullcalendar
+			$event->start = $row->start;
+			$event->end = $row->end;
+			$event->color = $default_color;
+			$event->textColor = $default_textColor;
+			$event_list[] = $event;
+		}
+		$eventList = new FullcalendarEventList();
+		if (!empty($event_list)){
+			$eventList->events = $event_list;
+		} else {
+			$eventList->$events = Array();
+			$eventList->$error = $ERR_NO_CONTENT_FOUND;
+		}
+		print(json_encode($eventList));
+	} else if ($query_type == 'nid'){
+		
+	} else if ($query_type == 'uid'){
+	
+	} else {
+		
+	}
+}
+
+/**
+ * Implementation of the reservation form submit handler
  */
 function content_reservation_reservation_form_submit($form, &$form_state){
 	if(isset($form_state['values']['start']) &&
@@ -125,10 +187,17 @@ function content_reservation_reservation_form_submit($form, &$form_state){
  */
 function content_reservation_menu() {
 	$items = array();
-	$items['reservations'] = array(
+	$items['reservations/r'] = array(
 		'title' => 'Reservations',
 		'description' => 'Lists reservable content',
 		'page callback' => 'content_reservation_reserve',
+		'access arguments' => array('view reservation'),
+		'type' => MENU_NORMAL_ITEM,
+	);
+	$items['reservations/j'] = array(
+		'title' => 'Reservations JSON',
+		'description' => 'Returns reservation information wrapped in json',
+		'page callback' => 'content_reservation_json',
 		'access arguments' => array('view reservation'),
 		'type' => MENU_NORMAL_ITEM,
 	);
