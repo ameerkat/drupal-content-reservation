@@ -7,13 +7,6 @@ function content_reservation_perm(){
 }
 
 /**
- * Implementation of preprocess_theme_hook()
- */
-function template_preprocess_content_reservation_list(&$variables){
-	// Just pass for now
-}
-
-/**
  * Implementation of hook_theme()
  */
 function content_reservation_theme() {
@@ -21,6 +14,10 @@ function content_reservation_theme() {
 		'content_reservation_list' => array(
 			'template' => 'content_reservation_list',
 			'arguments' => array('content_list' => NULL),
+		),
+		'content_reservation_fullcalendar_js' => array(
+			'template' => 'content_reservation_fullcalendar_js',
+			'arguments' => array('event_list' => NULL),
 		),
 	);
 }
@@ -36,6 +33,10 @@ function get_readable_content_type($machine_type_name){
 	} else {
 		return NULL;
 	}
+}
+
+function generate_fullcalendar_js($even_json){
+	
 }
 
 /**
@@ -55,8 +56,15 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 		if(!empty($content_list)){
 			$content_name = get_readable_content_type($content_type);
 			if($content_name){
-				drupal_set_title($content_name." Reservations");
+				drupal_set_title("Available ".$content_name." Reservations");
 			}
+			$event_list_json = content_reservation_json("type", $content_type);
+			drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
+			drupal_add_js(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/jquery/jquery-1.5.min.js');
+			drupal_add_css(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/fullcalendar/fullcalendar.css');
+			//drupal_add_css(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/fullcalendar/fullcalendar.print.css');
+			drupal_add_js(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/fullcalendar/fullcalendar.js');
+			drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
 			return theme("content_reservation_list", $content_list);
 		} else {
 			return "No content found for this content type";
@@ -124,6 +132,7 @@ function content_reservation_make_json($result){
 		$event = new FullcalendarEvent();
 		$event->id = $row->rid;
 		$event->title = $row->description;
+		// Convert times to fullcalendar compatible
 		$event->start = $row->start;
 		$event->end = $row->end;
 		$event->color = $default_color;
@@ -141,16 +150,20 @@ function content_reservation_json($query_type, $query_key){
 	if ($query_type == 'type'){
 		// TODO Select based on get params
 		$result = db_query("SELECT * FROM {content_reservation}, {node} WHERE {node}.nid = {content_reservation}.nid AND {node}.type = '%s'",  $query_key);
-		print(content_reservation_make_json($result));
+		return content_reservation_make_json($result);
 	} else if ($query_type == 'nid'){
 		$result = db_query("SELECT * FROM {content_reservation} WHERE nid = %d",  $query_key);
-		print(content_reservation_make_json($result));
+		return content_reservation_make_json($result);
 	} else if ($query_type == 'uid'){
 		$result = db_query("SELECT * FROM {content_reservation} WHERE uid = %d",  $query_key);
-		print(content_reservation_make_json($result));
+		return content_reservation_make_json($result);
 	} else {
-		print("[]");
+		return "[]";
 	}
+}
+
+function content_reservation_json_print($query_type, $query_key){
+	print content_reservation_json($query_type, $query_key);
 }
 
 /**
@@ -159,6 +172,7 @@ function content_reservation_json($query_type, $query_key){
 function content_reservation_reservation_form_submit($form, &$form_state){
 	if(isset($form_state['values']['start']) &&
 		isset($form_state['values']['end'])){
+		// TODO Check for conflicts before inserting
 		global $user;
 		$start = $form_state['values']['start'];
 		$end = $form_state['values']['end'];
@@ -185,9 +199,9 @@ function content_reservation_menu() {
 	$items['reservations/j'] = array(
 		'title' => 'Reservations JSON',
 		'description' => 'Returns reservation information wrapped in json',
-		'page callback' => 'content_reservation_json',
+		'page callback' => 'content_reservation_json_print',
 		'access arguments' => array('view reservation'),
-		'type' => MENU_NORMAL_ITEM,
+		'type' => MENU_CALLBACK,
 	);
 	return $items;
 }

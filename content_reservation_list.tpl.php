@@ -5,6 +5,8 @@
 	<li><a href="<?php echo $reservable_content->reservation_url; ?>"><?php echo $reservable_content->title; ?></a></li>
 <?php endforeach; ?>
 </ul>
+<h2>Current Reservations</h2>
+<div id="content_reservation-fullCalendar"></div>
 </div>
 <?php else: ?>
 <h2>Content List Empty</h2>
