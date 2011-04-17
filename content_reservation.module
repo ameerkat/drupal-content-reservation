@@ -114,53 +114,42 @@ class FullcalendarEvent{
 	public $color;
 	public $textColor;
 }
- 
-/**
-* Event type wrapper class
-*/
-class FullcalendarEventList{
-	public $events;
-	public $error;
+
+function content_reservation_make_json($result){
+	$event_list = Array();
+	while ($row = db_fetch_object($result)) {
+	// TODO replace this with actual color variable depending on type
+		$default_color = "#004f45";
+		$default_textColor = "#ffffff";
+		$event = new FullcalendarEvent();
+		$event->id = $row->rid;
+		$event->title = $row->description;
+		$event->start = $row->start;
+		$event->end = $row->end;
+		$event->color = $default_color;
+		$event->textColor = $default_textColor;
+		$event_list[] = $event;
+	}
+	return json_encode($event_list);
 }
 
 /**
  * Returns reservation 'events' from the database
  */
 function content_reservation_json($query_type, $query_key){
-	// JSON Error Codes
-	$ERR_NO_CONTENT_FOUND = "Query did not return any content.";
-	
+	// TODO Errors
 	if ($query_type == 'type'){
+		// TODO Select based on get params
 		$result = db_query("SELECT * FROM {content_reservation}, {node} WHERE {node}.nid = {content_reservation}.nid AND {node}.type = '%s'",  $query_key);
-		$event_list = Array();
-		while ($row = db_fetch_object($result)) {
-		// TODO replace this with actual color variable depending on type
-			$default_color = "#004f45";
-			$default_textColor = "#ffffff";
-			$event = new FullcalendarEvent();
-			$event->id = $row->rid;
-			$event->title = $row->description;
-			// Convert these times to readable format by fullcalendar
-			$event->start = $row->start;
-			$event->end = $row->end;
-			$event->color = $default_color;
-			$event->textColor = $default_textColor;
-			$event_list[] = $event;
-		}
-		$eventList = new FullcalendarEventList();
-		if (!empty($event_list)){
-			$eventList->events = $event_list;
-		} else {
-			$eventList->$events = Array();
-			$eventList->$error = $ERR_NO_CONTENT_FOUND;
-		}
-		print(json_encode($eventList));
+		print(content_reservation_make_json($result));
 	} else if ($query_type == 'nid'){
-		
+		$result = db_query("SELECT * FROM {content_reservation} WHERE nid = %d",  $query_key);
+		print(content_reservation_make_json($result));
 	} else if ($query_type == 'uid'){
-	
+		$result = db_query("SELECT * FROM {content_reservation} WHERE uid = %d",  $query_key);
+		print(content_reservation_make_json($result));
 	} else {
-		
+		print("[]");
 	}
 }
 
@@ -176,7 +165,6 @@ function content_reservation_reservation_form_submit($form, &$form_state){
 		$description = $form_state['values']['description'];
 		$nid = $form_state['values']['node_id'];
 		$uid = $user->uid;
-		drupal_set_message("User: ".$uid);
 		db_query("INSERT INTO {content_reservation} (nid, uid, description, start, end, created, modified) VALUES (%d, %d, '%s', '%s', '%s', NOW(), NOW())", $nid, $uid, $description, $start, $end);
 		drupal_set_message('Your reservation has been added.');
 	}
