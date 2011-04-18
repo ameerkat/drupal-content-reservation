@@ -85,6 +85,12 @@ function render_calendar_div(){
 	return "<div id=\"content_reservation-fullCalendar\"></div>";
 }
 
+function render_content_link($content_type){
+	global $base_url;
+	$readable = get_readable_content_type($content_type);
+	return "<a href=\"$base_url/reservations/r/$content_type\" class=\"content_link\">Back to all $readable reservations</a><br />";
+}
+
 /**
  * Reservable content list page callback
  */
@@ -122,11 +128,13 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 		drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
 		$event_list_json = content_reservation_json("nid", $content_id);
 		drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
-		$to_return = drupal_get_form('content_reservation_reservation_form', $content_id);
+		// TODO Move this to a theme
+		$to_return = render_content_link($content_type);
+		$to_return .= drupal_get_form('content_reservation_reservation_form', $content_id);
 		$to_return .= render_calendar_div();
 		// Let them set settings for this content if they have 'administer reservations' privelages
 		if(user_access('administer reservations', $user)){
-			$to_return .= drupal_get_form('content_reservation_content_admin_form', $content_id, $content_type);
+			$to_return .= drupal_get_form('content_reservation_content_admin_form', $content_id);
 		}
 		return $to_return;
 	} else {
@@ -180,13 +188,13 @@ function content_reservation_reservation_form($form_state, $content_id){
 /**
  * Implementation of the reservation form
  */
-function content_reservation_content_admin_form($form_state, $content_id, $content_name){
+function content_reservation_content_admin_form($form_state, $content_id){
 	$form['div_tag'] = array(
 		'#type' => 'markup',
 		'#value' => '<div class="content_admin_form">');
 	$form['settings'] = array(
 		'#type' => 'fieldset',
-		'#title' => t($content_name.' Reservation Settings'),
+		'#title' => t(get_readable_content_title($content_id).' Reservation Settings'),
 		'#collapsible' => true);
 	$form['settings']['color'] = array(
 		'#type' => 'textfield',
