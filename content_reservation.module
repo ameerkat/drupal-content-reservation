@@ -10,7 +10,27 @@ class ContentReservation {
  * Implementation of hook_perm()
  */
 function content_reservation_perm(){
-	return array('view reservations', 'make reservations', 'modify reservations', 'administer reservation');
+	return array('view reservations', 'make reservations', 'modify reservations', 'administer reservations');
+}
+
+function get_color_var($nid){
+	$var_name = "nid_". $nid . "_color";
+	return variable_get($var_name, ContentReservation::$default_color);
+}
+
+function set_color_var($nid, $color){
+	$var_name = "nid_". $nid . "_color";
+	return variable_set($var_name, $color);
+}
+
+function get_textColor_var($nid){
+	$var_name = "nid_". $nid . "_textColor";
+	return variable_get($var_name, ContentReservation::$default_textColor);
+}
+
+function set_textColor_var($nid, $color){
+	$var_name = "nid_". $nid . "_textColor";
+	return variable_set($var_name, $color);
 }
 
 /**
@@ -18,9 +38,7 @@ function content_reservation_perm(){
  */
 function template_preprocess_content_reservation_list(&$variables){
 	foreach ($variables['content_list'] as $reservable_content){
-		$var_name = $reservable_content->title . "_color";
-		$color = variable_get($var_name, ContentReservation::$default_color);
-		$reservable_content->color = $color;
+		$reservable_content->color = get_color_var($reservable_content->nid);
 	}
 }
 
@@ -71,6 +89,7 @@ function render_calendar_div(){
  * Reservable content list page callback
  */
 function content_reservation_reserve($content_type = NULL, $content_id = NULL){
+	global $user, $base_url;
 	drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
 	drupal_add_js(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/jquery/jquery-1.5.min.js');
 	drupal_add_css(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/fullcalendar/fullcalendar.css');
@@ -78,7 +97,7 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 	if($content_type && !$content_id){
 		// There is no content id passed in so we just display the default
 		// content reservation list
-		global $base_url;
+		
 		$content_list = array();
 		$result = db_query("SELECT * FROM {node} WHERE type = '%s'",  $content_type);
 		while ($row = db_fetch_object($result)) {
@@ -105,6 +124,10 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 		drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
 		$to_return = drupal_get_form('content_reservation_reservation_form', $content_id);
 		$to_return .= render_calendar_div();
+		// Let them set settings for this content if they have 'administer reservations' privelages
+		if(user_access('administer reservations', $user)){
+			$to_return .= drupal_get_form('content_reservation_content_admin_form', $content_id, $content_type);
+		}
 		return $to_return;
 	} else {
 		return "No content type specified";
@@ -157,25 +180,33 @@ function content_reservation_reservation_form($form_state, $content_id){
 /**
  * Implementation of the reservation form
  */
-function content_reservation_content_admin($form_state, $content_id, $content_name){
+function content_reservation_content_admin_form($form_state, $content_id, $content_name){
 	$form['div_tag'] = array(
 		'#type' => 'markup',
 		'#value' => '<div class="content_admin_form">');
 	$form['settings'] = array(
 		'#type' => 'fieldset',
-		'#title' => t($content_name.'Reservation Settings'));
-	$form['settings'] = array(
+		'#title' => t($content_name.' Reservation Settings'),
+		'#collapsible' => true);
+	$form['settings']['color'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Content Color'),
+		'#size' => 10,
 		'#description' => t('Color used to display reservations for this content on the calendar'),
-		'#default_value' => variable_get($var_name, ContentReservation::$default_color));
+		'#default_value' => get_color_var($content_id));
+	$form['settings']['textColor'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Content textColor'),
+		'#size' => 10,
+		'#description' => t('Color used to display reservations font for this content on the calendar'),
+		'#default_value' => get_textColor_var($content_id));
 	$form['node_id'] = array(
 		'#type' => 'value',
 		'#value' => $content_id);
-	$form['submit'] = array(
+	$form['settings']['submit'] = array(
 		'#type' => 'submit',
 		'#value' => t('Submit'),
-		'#submit' => array('content_reservation_reservation_form_submit'));
+		'#submit' => array('content_reservation_content_admin_form_submit'));
 	return $form;
 }
 
@@ -214,8 +245,8 @@ function content_reservation_make_json($result){
 		// Convert times to fullcalendar compatible unix timestamp
 		$event->start = convert_unix_time($row->start);
 		$event->end = convert_unix_time($row->end);
-		$event->color = ContentReservation::$default_color;
-		$event->textColor = ContentReservation::$default_textColor;
+		$event->color = get_color_var($row->nid);
+		$event->textColor = get_textColor_var($row->nid);
 		$event->allDay = false;
 		$event_list[] = $event;
 	}
@@ -261,6 +292,19 @@ function content_reservation_reservation_form_submit($form, &$form_state){
 		$uid = $user->uid;
 		db_query("INSERT INTO {content_reservation} (nid, uid, description, start, end, created, modified) VALUES (%d, %d, '%s', '%s', '%s', NOW(), NOW())", $nid, $uid, $description, $start, $end);
 		drupal_set_message('Your reservation has been added.');
+	}
+}
+
+/**
+ * Implementation of the admin settings form submit handler
+ */
+function content_reservation_content_admin_form_submit($form, &$form_state){
+	if(isset($form_state['values']['color']) &&
+		isset($form_state['values']['textColor'])){
+		$nid = $form_state['values']['node_id'];
+		set_color_var($nid, $form_state['values']['color']);
+		set_textColor_var($nid, $form_state['values']['textColor']);
+		drupal_set_message('Content settings have been updated.');
 	}
 }
 
