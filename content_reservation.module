@@ -93,6 +93,8 @@ function render_content_link($content_type){
 
 /**
  * Reservable content list page callback
+ * TODO remap this to /type/$content_type and /id/$content_id, using var for
+ * 	request type and var for request content like the json url scheme
  */
 function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 	global $user, $base_url;
@@ -103,7 +105,6 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 	if($content_type && !$content_id){
 		// There is no content id passed in so we just display the default
 		// content reservation list
-		
 		$content_list = array();
 		$result = db_query("SELECT * FROM {node} WHERE type = '%s'",  $content_type);
 		while ($row = db_fetch_object($result)) {
@@ -123,6 +124,10 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 		}
 	} elseif ($content_type && $content_id) {
 		$content_title = get_readable_content_title($content_id);
+		if(!$content_title){
+			drupal_set_message("Content with nid #$content_id could not be found.", 'warning');
+			return render_content_link($content_type);
+		}
 		drupal_set_title("Reserve ".$content_title);
 		// TODO Check to see if the actual content_id exists + Print out name
 		drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
@@ -326,7 +331,7 @@ function content_reservation_menu() {
 		'description' => 'Lists reservable content',
 		'page callback' => 'content_reservation_reserve',
 		'access arguments' => array('view reservation'),
-		'type' => MENU_NORMAL_ITEM,
+		'type' => MENU_CALLBACK,
 	);
 	$items['reservations/j'] = array(
 		'title' => 'Reservations JSON',
