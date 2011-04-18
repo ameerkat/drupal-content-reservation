@@ -1,11 +1,29 @@
-#startFieldset {
-	width: 175px;
+.timeRangeFieldset{
 	display: inline-block;
+	float: left;
+	width: 280px;
+	height: 150px;
 }
 
-#endFieldset {
-	width: 175px;
+.descriptionFieldset{
 	display: inline-block;
+	width: 280px;
+}
+
+#content_reservation_list li {
+	background-image: none;
+	font-size: 12pt;
+}
+
+.colorBlock {
+	width: 12px;
+	height: 12px;
+	display: inline-block;
+	margin-right: 10px;
+}
+
+#edit-description {
+	
 }
 
 #content_reservation-fullCalendar {

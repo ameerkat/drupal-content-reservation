@@ -1,9 +1,27 @@
 <?php
+
+// TODO replace this with actual color variable depending on type
+class ContentReservation {
+	public static $default_color = "#004f45";
+	public static $default_textColor = "#ffffff";
+}
+
 /**
  * Implementation of hook_perm()
  */
 function content_reservation_perm(){
 	return array('view reservations', 'make reservations', 'modify reservations', 'administer reservation');
+}
+
+/**
+ * Implementation of template_preprocess_hook
+ */
+function template_preprocess_content_reservation_list(&$variables){
+	foreach ($variables['content_list'] as $reservable_content){
+		$var_name = $reservable_content->title . "_color";
+		$color = variable_get($var_name, ContentReservation::$default_color);
+		$reservable_content->color = $color;
+	}
 }
 
 /**
@@ -35,8 +53,14 @@ function get_readable_content_type($machine_type_name){
 	}
 }
 
-function generate_fullcalendar_js($even_json){
-	
+function get_readable_content_title($nid){
+	$result = db_query("SELECT * FROM {node} WHERE nid = %d",  $nid);
+	$row = db_fetch_object($result);
+	if($row){
+		return $row->title;
+	} else {
+		return NULL;
+	}
 }
 
 function render_calendar_div(){
@@ -73,6 +97,8 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 			return "No content found for this content type";
 		}
 	} elseif ($content_type && $content_id) {
+		$content_title = get_readable_content_title($content_id);
+		drupal_set_title("Reserve ".$content_title);
 		// TODO Check to see if the actual content_id exists + Print out name
 		drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
 		$event_list_json = content_reservation_json("nid", $content_id);
@@ -92,21 +118,57 @@ function content_reservation_reservation_form($form_state, $content_id){
 	$form['div_tag'] = array(
 		'#type' => 'markup',
 		'#value' => '<div class="reservation_form">');
-	$form['start'] = array(
+	$form['time'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Reservation Time'),
+		'#attributes' => array('class' => 'timeRangeFieldset')
+	);
+	$form['time']['start'] = array(
 		'#type' => 'date_select',
 		'#title' => t('From'),
 		'#date_format' => 'm/d/Y - H:i',
 		'#date_year_range' => '0:+1',
 	);
-	$form['end'] = array(
+	$form['time']['end'] = array(
 		'#type' => 'date_select',
 		'#title' => t('To'),
 		'#date_format' => 'm/d/Y - H:i',
 		'#date_year_range' => '0:+1',
 	);
 	$form['description'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Description'),
+		'#attributes' => array('class' => 'descriptionFieldset')
+	);
+	$form['description']['description'] = array(
 		'#type' => 'textarea',
-		'#description' => t('Short description of reservation purpose'));
+		'#description' => t('Short description of reservation purpose'),
+		'#rows' => 4);
+	$form['node_id'] = array(
+		'#type' => 'value',
+		'#value' => $content_id);
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Submit'),
+		'#submit' => array('content_reservation_reservation_form_submit'));
+	return $form;
+}
+
+/**
+ * Implementation of the reservation form
+ */
+function content_reservation_content_admin($form_state, $content_id, $content_name){
+	$form['div_tag'] = array(
+		'#type' => 'markup',
+		'#value' => '<div class="content_admin_form">');
+	$form['settings'] = array(
+		'#type' => 'fieldset',
+		'#title' => t($content_name.'Reservation Settings'));
+	$form['settings'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Content Color'),
+		'#description' => t('Color used to display reservations for this content on the calendar'),
+		'#default_value' => variable_get($var_name, ContentReservation::$default_color));
 	$form['node_id'] = array(
 		'#type' => 'value',
 		'#value' => $content_id);
@@ -128,22 +190,33 @@ class FullcalendarEvent{
 	public $url;
 	public $color;
 	public $textColor;
+	public $allDay;
+}
+
+function convert_unix_time($datetime){
+	$pattern = '/(\d{4})-(\d{2})-(\d{2})\s*(\d{2}):(\d{2}):(\d{2})/';
+	preg_match($pattern, $datetime, $matches);
+	$year = $matches[1];
+	$month = $matches[2];
+	$day = $matches[3];
+	$hour = $matches[4];
+	$minute = $matches[5];
+	$second = $matches[6];
+	return mktime($hour, $minute, $second, $month, $day, $year);
 }
 
 function content_reservation_make_json($result){
 	$event_list = Array();
 	while ($row = db_fetch_object($result)) {
-	// TODO replace this with actual color variable depending on type
-		$default_color = "#004f45";
-		$default_textColor = "#ffffff";
 		$event = new FullcalendarEvent();
 		$event->id = $row->rid;
 		$event->title = $row->description;
-		// Convert times to fullcalendar compatible
-		$event->start = $row->start;
-		$event->end = $row->end;
-		$event->color = $default_color;
-		$event->textColor = $default_textColor;
+		// Convert times to fullcalendar compatible unix timestamp
+		$event->start = convert_unix_time($row->start);
+		$event->end = convert_unix_time($row->end);
+		$event->color = ContentReservation::$default_color;
+		$event->textColor = ContentReservation::$default_textColor;
+		$event->allDay = false;
 		$event_list[] = $event;
 	}
 	return json_encode($event_list);
