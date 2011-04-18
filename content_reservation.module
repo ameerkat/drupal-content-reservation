@@ -1,18 +1,130 @@
 <?php
+/**
+ * Module that enables users to 'reserve' drupal nodes for specified periods 
+ * of time.
+ * @author Ameer Ayoub <ameer.ayoub@asu.edu>
+ */
 
-// TODO replace this with actual color variable depending on type
+/**
+ * Start module specific helper functions and classes
+ * (Anything that doesn't get called directly by drupal)
+ * ==============================================
+ */
+
+/**
+* Event type definition compatible with fullcalendar
+* http://arshaw.com/fullcalendar/docs/event_data/Event_Object/
+*/
+class FullcalendarEvent{
+	public $id;
+	public $title;
+	public $start;
+	public $end;
+	public $url;
+	public $color;
+	public $textColor;
+	public $allDay;
+}
+ 
+/**
+ * Encapsulation of module wide settings into ContentReservation namespace
+ */
 class ContentReservation {
+	// TODO Pull the default colors from a system wide variable
 	public static $default_color = "#004f45";
 	public static $default_textColor = "#ffffff";
 }
 
 /**
- * Implementation of hook_perm()
+ * Helper function that gets human readable node type name from machine readable name
  */
-function content_reservation_perm(){
-	return array('view reservations', 'make reservations', 'modify reservations', 'administer reservations');
+function get_readable_content_type($machine_type_name){
+	$result = db_query("SELECT * FROM {node_type} WHERE type = '%s'",  $machine_type_name);
+	$row = db_fetch_object($result);
+	if($row){
+		return $row->name;
+	} else {
+		return NULL;
+	}
 }
 
+/**
+ * Helper function that gets the readable content title based on the node id
+ * TODO Make sure you get the latest one by sorting using vid
+ */
+function get_readable_content_title($nid){
+	$result = db_query("SELECT * FROM {node} WHERE nid = %d",  $nid);
+	$row = db_fetch_object($result);
+	if($row){
+		return $row->title;
+	} else {
+		return NULL;
+	}
+}
+
+function render_calendar_div(){
+	return "<div id=\"content_reservation-fullCalendar\"></div>";
+}
+
+function render_content_link($content_type){
+	global $base_url;
+	$readable = get_readable_content_type($content_type);
+	return "<a href=\"$base_url/reservations/r/$content_type\" class=\"content_link\">Back to all $readable reservations</a><br />";
+}
+
+function convert_unix_time($datetime){
+	$pattern = '/(\d{4})-(\d{2})-(\d{2})\s*(\d{2}):(\d{2}):(\d{2})/';
+	preg_match($pattern, $datetime, $matches);
+	$year = $matches[1];
+	$month = $matches[2];
+	$day = $matches[3];
+	$hour = $matches[4];
+	$minute = $matches[5];
+	$second = $matches[6];
+	return mktime($hour, $minute, $second, $month, $day, $year);
+}
+
+function content_reservation_make_json($result){
+	$event_list = Array();
+	while ($row = db_fetch_object($result)) {
+		$event = new FullcalendarEvent();
+		$event->id = $row->rid;
+		$event->title = $row->description;
+		// Convert times to fullcalendar compatible unix timestamp
+		$event->start = convert_unix_time($row->start);
+		$event->end = convert_unix_time($row->end);
+		$event->color = get_color_var($row->nid);
+		$event->textColor = get_textColor_var($row->nid);
+		$event->allDay = false;
+		$event_list[] = $event;
+	}
+	return json_encode($event_list);
+}
+
+/**
+ * Returns reservation 'events' from the database
+ */
+function content_reservation_json($query_type, $query_key){
+	// TODO Errors
+	if ($query_type == 'type'){
+		// TODO Select based on get params
+		$result = db_query("SELECT * FROM {content_reservation}, {node} WHERE {node}.nid = {content_reservation}.nid AND {node}.type = '%s'",  $query_key);
+		return content_reservation_make_json($result);
+	} else if ($query_type == 'nid'){
+		$result = db_query("SELECT * FROM {content_reservation} WHERE nid = %d",  $query_key);
+		return content_reservation_make_json($result);
+	} else if ($query_type == 'uid'){
+		$result = db_query("SELECT * FROM {content_reservation} WHERE uid = %d",  $query_key);
+		return content_reservation_make_json($result);
+	} else {
+		return "[]";
+	}
+}
+
+/**
+ * Some helper function for getting and setting content calendar colors
+ * TODO Consider making a separate database table as these may get large
+ */
 function get_color_var($nid){
 	$var_name = "nid_". $nid . "_color";
 	return variable_get($var_name, ContentReservation::$default_color);
@@ -34,9 +146,23 @@ function set_textColor_var($nid, $color){
 }
 
 /**
- * Implementation of template_preprocess_hook
+ * ==============================================
+ * End module specific helper functions and classes
+ */
+
+/**
+ * Implementation of hook_perm()
+ */
+function content_reservation_perm(){
+	return array('view reservations', 'make reservations', 'modify reservations', 'administer reservations');
+}
+
+/**
+ * Implementation of template_preprocess_hook for reservation list
  */
 function template_preprocess_content_reservation_list(&$variables){
+	// Updates the content list to contain information about colors
+	// For use to display the .colorBlock div next to the link in the theme
 	foreach ($variables['content_list'] as $reservable_content){
 		$reservable_content->color = get_color_var($reservable_content->nid);
 	}
@@ -56,39 +182,6 @@ function content_reservation_theme() {
 			'arguments' => array('event_list' => NULL),
 		),
 	);
-}
-
-/**
- * Helper function that gets human readable node type name from machine readable name
- */
-function get_readable_content_type($machine_type_name){
-	$result = db_query("SELECT * FROM {node_type} WHERE type = '%s'",  $machine_type_name);
-	$row = db_fetch_object($result);
-	if($row){
-		return $row->name;
-	} else {
-		return NULL;
-	}
-}
-
-function get_readable_content_title($nid){
-	$result = db_query("SELECT * FROM {node} WHERE nid = %d",  $nid);
-	$row = db_fetch_object($result);
-	if($row){
-		return $row->title;
-	} else {
-		return NULL;
-	}
-}
-
-function render_calendar_div(){
-	return "<div id=\"content_reservation-fullCalendar\"></div>";
-}
-
-function render_content_link($content_type){
-	global $base_url;
-	$readable = get_readable_content_type($content_type);
-	return "<a href=\"$base_url/reservations/r/$content_type\" class=\"content_link\">Back to all $readable reservations</a><br />";
 }
 
 /**
@@ -221,69 +314,6 @@ function content_reservation_content_admin_form($form_state, $content_id){
 		'#value' => t('Submit'),
 		'#submit' => array('content_reservation_content_admin_form_submit'));
 	return $form;
-}
-
-/**
-* Event type definition
-*/
-class FullcalendarEvent{
-	public $id;
-	public $title;
-	public $start;
-	public $end;
-	public $url;
-	public $color;
-	public $textColor;
-	public $allDay;
-}
-
-function convert_unix_time($datetime){
-	$pattern = '/(\d{4})-(\d{2})-(\d{2})\s*(\d{2}):(\d{2}):(\d{2})/';
-	preg_match($pattern, $datetime, $matches);
-	$year = $matches[1];
-	$month = $matches[2];
-	$day = $matches[3];
-	$hour = $matches[4];
-	$minute = $matches[5];
-	$second = $matches[6];
-	return mktime($hour, $minute, $second, $month, $day, $year);
-}
-
-function content_reservation_make_json($result){
-	$event_list = Array();
-	while ($row = db_fetch_object($result)) {
-		$event = new FullcalendarEvent();
-		$event->id = $row->rid;
-		$event->title = $row->description;
-		// Convert times to fullcalendar compatible unix timestamp
-		$event->start = convert_unix_time($row->start);
-		$event->end = convert_unix_time($row->end);
-		$event->color = get_color_var($row->nid);
-		$event->textColor = get_textColor_var($row->nid);
-		$event->allDay = false;
-		$event_list[] = $event;
-	}
-	return json_encode($event_list);
-}
-
-/**
- * Returns reservation 'events' from the database
- */
-function content_reservation_json($query_type, $query_key){
-	// TODO Errors
-	if ($query_type == 'type'){
-		// TODO Select based on get params
-		$result = db_query("SELECT * FROM {content_reservation}, {node} WHERE {node}.nid = {content_reservation}.nid AND {node}.type = '%s'",  $query_key);
-		return content_reservation_make_json($result);
-	} else if ($query_type == 'nid'){
-		$result = db_query("SELECT * FROM {content_reservation} WHERE nid = %d",  $query_key);
-		return content_reservation_make_json($result);
-	} else if ($query_type == 'uid'){
-		$result = db_query("SELECT * FROM {content_reservation} WHERE uid = %d",  $query_key);
-		return content_reservation_make_json($result);
-	} else {
-		return "[]";
-	}
 }
 
 function content_reservation_json_print($query_type, $query_key){
