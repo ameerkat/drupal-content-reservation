@@ -1,13 +1,13 @@
 .timeRangeFieldset{
 	display: inline-block;
 	float: left;
-	width: 280px;
+	width: 290px;
 	height: 150px;
 }
 
 .descriptionFieldset{
 	display: inline-block;
-	width: 280px;
+	width: 290px;
 }
 
 #content_reservation_list li {
