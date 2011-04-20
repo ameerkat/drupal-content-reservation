@@ -259,14 +259,21 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 		$event_list_json = content_reservation_json("nid", $content_id);
 		drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
 		// TODO Move this to a theme
-		$to_return = render_content_link($content_type);
-		$to_return .= drupal_get_form('content_reservation_reservation_form', $content_id);
-		$to_return .= render_calendar_div();
+		//$to_return = render_content_link($content_type);
+		$to_return = array();
+		$to_return['content_link'] = render_content_link($content_type);
+		//$to_return .= drupal_get_form('content_reservation_reservation_form', $content_id);
+		$to_return['reservation_form'] = drupal_get_form('content_reservation_reservation_form', $content_id);
+		//$to_return .= render_calendar_div();
+		$to_return['calendar_div'] = render_calendar_div();
 		// Let them set settings for this content if they have 'administer reservations' privelages
 		if(user_access('administer reservations', $user)){
-			$to_return .= drupal_get_form('content_reservation_content_admin_form', $content_id);
+			//$to_return .= drupal_get_form('content_reservation_content_admin_form', $content_id);
+			$to_return['admin_form'] = drupal_get_form('content_reservation_content_admin_form', $content_id);
+			
 		}
-		return $to_return;
+		//return $to_return;
+		return theme("content_reservation_reserve", $to_return);
 	} else {
 		return "No content type specified";
 	}
