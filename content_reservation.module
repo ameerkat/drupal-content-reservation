@@ -163,7 +163,7 @@ function content_reservation_set_textColor_var($nid, $color){
  * Implementation of hook_perm()
  */
 function content_reservation_perm(){
-	return array('view reservations', 'make reservations', 'modify reservations', 'administer reservations');
+	return array('view reservations', 'create reservations', 'modify all reservations', 'administer reservations');
 }
 
 /**
@@ -266,12 +266,15 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL, $
 		$to_return = array();
 		$to_return['content_link'] = content_reservation_get_content_link($content_type);
 		$to_return['content_title'] = get_readable_content_type($content_type);
-		$to_return['reservation_form'] = drupal_get_form('content_reservation_reservation_form', $content_id);
+		if($reservation_id){
+			$to_return['reservation_form'] = drupal_get_form('content_reservation_reservation_form', $content_id, 'edit', $reservation_id);
+		} else {
+			$to_return['reservation_form'] = drupal_get_form('content_reservation_reservation_form', $content_id, 'create');
+		}
 		$to_return['calendar_div'] = render_calendar_div();
 		// Let them set settings for this content if they have 'administer reservations' privelages
 		if(user_access('administer reservations', $user)){
 			$to_return['admin_form'] = drupal_get_form('content_reservation_content_admin_form', $content_id);
-			
 		}
 		return theme("content_reservation_reserve", $to_return);
 	} else {
@@ -279,42 +282,106 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL, $
 	}
 }
 
+/*function check_reservation_edit_permissions($rid){
+	global $user;
+	if(user_access("modify reservations", $user)){
+		return true;
+	} else {
+		$result = db_query("SELECT rid, uid FROM {content_reservation} WHERE rid = %d",  $rid);
+		$row = db_fetch_object($result);
+		if($row){
+			if ($row->uid == $user.$rid){
+				return true;
+			}
+		}
+		return false;
+	}
+}*/
+
 /**
  * Implementation of the reservation form
  */
-function content_reservation_reservation_form($form_state, $content_id){
-	$form['div_tag'] = array(
-		'#type' => 'markup',
-		'#value' => '<div class="reservation_form">');
-	$form['event'] = array(
-		'#type' => 'fieldset',
-		'#title'=> t('Add an Event'),
-		'#attributes' => array('class' => 'fieldset_reservation_form'));
-	$form['event']['start'] = array(
-		'#type' => 'date_select',
-		'#title' => t('From'),
-		'#date_format' => 'm/d/Y - H:i',
-		'#date_year_range' => '0:+1',
-	);
-	$form['event']['end'] = array(
-		'#type' => 'date_select',
-		'#title' => t('To'),
-		'#date_format' => 'm/d/Y - H:i',
-		'#date_year_range' => '0:+1',
-	);
-	$form['event']['description'] = array(
-		'#type' => 'textarea',
-		'#description' => t('Short description of reservation purpose'),
-		'#rows' => 4,
-		'#cols' => 15);
-	$form['node_id'] = array(
-		'#type' => 'value',
-		'#value' => $content_id);
-	$form['event']['submit'] = array(
-		'#type' => 'submit',
-		'#value' => t('Add'),
-		'#submit' => array('content_reservation_reservation_form_submit'));
-	return $form;
+function content_reservation_reservation_form($form_state, $content_id, $mode = 'create', $rid = 0){
+	if($mode == "create"){
+		$form = array();
+		$form['div_tag'] = array(
+			'#type' => 'markup',
+			'#value' => '<div class="reservation_form">');
+		$form['event'] = array(
+			'#type' => 'fieldset',
+			'#title'=> t('Add an Event'),
+			'#attributes' => array('class' => 'fieldset_reservation_form'));
+		$form['event']['start'] = array(
+			'#type' => 'date_select',
+			'#title' => t('From'),
+			'#date_format' => 'm/d/Y - H:i',
+			'#date_year_range' => '0:+1',
+		);
+		$form['event']['end'] = array(
+			'#type' => 'date_select',
+			'#title' => t('To'),
+			'#date_format' => 'm/d/Y - H:i',
+			'#date_year_range' => '0:+1',
+		);
+		$form['event']['description'] = array(
+			'#type' => 'textarea',
+			'#description' => t('Short description of reservation purpose'),
+			'#rows' => 4,
+			'#cols' => 15);
+		$form['node_id'] = array(
+			'#type' => 'value',
+			'#value' => $content_id);
+		$form['event']['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Add'),
+			'#validate' => array('content_reservation_reservation_form_validate'),
+			'#submit' => array('content_reservation_reservation_form_submit'));
+		return $form;
+	} else if ($mode == "edit") {
+		//if(check_reservation_edit_permissions($rid)){
+			$form = array();
+			$form['div_tag'] = array(
+				'#type' => 'markup',
+				'#value' => '<div class="reservation_form">');
+			$form['event'] = array(
+				'#type' => 'fieldset',
+				'#title'=> t('Add an Event'),
+				'#attributes' => array('class' => 'fieldset_reservation_form'));
+			$form['event']['start'] = array(
+				'#type' => 'date_select',
+				'#title' => t('From'),
+				'#date_format' => 'm/d/Y - H:i',
+				'#date_year_range' => '0:+1',
+			);
+			$form['event']['end'] = array(
+				'#type' => 'date_select',
+				'#title' => t('To'),
+				'#date_format' => 'm/d/Y - H:i',
+				'#date_year_range' => '0:+1',
+			);
+			$form['event']['description'] = array(
+				'#type' => 'textarea',
+				'#description' => t('Short description of reservation purpose'),
+				'#rows' => 4,
+				'#cols' => 15);
+			$form['node_id'] = array(
+				'#type' => 'value',
+				'#value' => $content_id);
+			$form['reservation_id'] = array(
+				'#type' => 'value',
+				'#value' => $reservation_id);
+			$form['event']['delete'] = array(
+				'#type' => 'submit',
+				'#value' => t('Delete'),
+				'#submit' => array('content_reservation_reservation_form_delete'));
+			$form['event']['submit'] = array(
+				'#type' => 'submit',
+				'#value' => t('Edit'),
+				'#validate' => array('content_reservation_reservation_form_validate'),
+				'#submit' => array('content_reservation_reservation_form_edit'));
+			return $form;
+		//}
+	}
 }
 
 /**
@@ -408,7 +475,6 @@ function content_reservation_reservation_form_submit($form, &$form_state){
 		}
 	}
 }
-
 /**
  * Implementation of the admin settings form submit handler
  */
