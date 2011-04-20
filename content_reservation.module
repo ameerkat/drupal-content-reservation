@@ -3,6 +3,10 @@
  * Module that enables users to 'reserve' drupal nodes for specified periods 
  * of time.
  * @author Ameer Ayoub <ameer.ayoub@asu.edu>
+ *
+ * TODO Make events editable
+ * TODO Human readable time on the conflict resolution message
+ * TODO Hook into views and panels, and possible provide block for calendar
  */
 
 /**
@@ -50,10 +54,9 @@ function get_readable_content_type($machine_type_name){
 
 /**
  * Helper function that gets the readable content title based on the node id
- * TODO Make sure you get the latest one by sorting using vid
  */
 function get_readable_content_title($nid){
-	$result = db_query("SELECT * FROM {node} WHERE nid = %d",  $nid);
+	$result = db_query("SELECT * FROM {node} WHERE nid = %d ORDER BY vid DESC",  $nid);
 	$row = db_fetch_object($result);
 	if($row){
 		return $row->title;
@@ -124,6 +127,7 @@ function content_reservation_json($query_type, $query_key){
 /**
  * Some helper function for getting and setting content calendar colors
  * TODO Consider making a separate database table as these may get large
+ * TODO Append content_reservation_ to the beginning of these so as not to conflict
  */
 function get_color_var($nid){
 	$var_name = "nid_". $nid . "_color";
