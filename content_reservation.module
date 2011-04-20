@@ -211,6 +211,7 @@ function content_reservation_cron(){
  * Reservable content list page callback
  * TODO remap this to /type/$content_type and /id/$content_id, using var for
  * 	request type and var for request content like the json url scheme
+ * TDOO Add a main page that lists all content type and map it to a url via hook_menu
  */
 function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 	global $user, $base_url;
@@ -335,6 +336,7 @@ function content_reservation_content_admin_form($form_state, $content_id){
 	$form['settings']['submit'] = array(
 		'#type' => 'submit',
 		'#value' => t('Submit'),
+		'#validate' => array('content_reservation_content_admin_form_validate'),
 		'#submit' => array('content_reservation_content_admin_form_submit'));
 	return $form;
 }
@@ -344,20 +346,55 @@ function content_reservation_json_print($query_type, $query_key){
 }
 
 /**
+ * Helper function to check for scheduling conflicts
+ * Returns a conflict message if true, NULL otherwise
+ */
+function check_for_conflicts($nid, $start, $end){
+	if($end < $start){
+		return array(0, "Event can not end before it starts, please check times.");
+	}
+	$result = db_query("SELECT rid, start, end, description FROM {content_reservation} WHERE nid = %d",  $nid);
+	while ($row = db_fetch_object($result)) {
+		if (($start > $row->start && $start < $row->end) || ($end > $row->start && $end < $row->end)) {
+			return array($row->rid, "Could not create event, conflicts with: $row->description @ $row->start");
+		}
+	}
+	return array(-1, NULL);
+}
+
+/**
+ * Implementation of the reservation form validation hanlder
+ */
+function content_reservation_reservation_form_validate($form, &$form_state){
+	$check = check_for_conflicts($form_state['values']['node_id'], $form_state['values']['start'], $form_state['values']['end']);
+	if($check[1]){
+		form_set_error('', $check[1]);
+	}
+	if($form_state['values']['description'] == ''){
+		form_set_error('', "Please enter a basic description.");
+	}
+}
+
+/**
  * Implementation of the reservation form submit handler
  */
 function content_reservation_reservation_form_submit($form, &$form_state){
+	// For some reason we got double posts so I'm going to check for validity here
 	if(isset($form_state['values']['start']) &&
 		isset($form_state['values']['end'])){
-		// TODO Check for conflicts before inserting
-		global $user;
-		$start = $form_state['values']['start'];
-		$end = $form_state['values']['end'];
-		$description = $form_state['values']['description'];
-		$nid = $form_state['values']['node_id'];
-		$uid = $user->uid;
-		db_query("INSERT INTO {content_reservation} (nid, uid, description, start, end, created, modified) VALUES (%d, %d, '%s', '%s', '%s', NOW(), NOW())", $nid, $uid, $description, $start, $end);
-		drupal_set_message('Your reservation has been added.');
+		$check = check_for_conflicts($form_state['values']['node_id'], $form_state['values']['start'], $form_state['values']['end']);
+		if(!$check[1]){
+			global $user;
+			$start = $form_state['values']['start'];
+			$end = $form_state['values']['end'];
+			$description = $form_state['values']['description'];
+			$nid = $form_state['values']['node_id'];
+			$uid = $user->uid;
+			db_query("INSERT INTO {content_reservation} (nid, uid, description, start, end, created, modified) VALUES (%d, %d, '%s', '%s', '%s', NOW(), NOW())", $nid, $uid, $description, $start, $end);
+			drupal_set_message('Your reservation has been added.');
+		} else {
+			drupal_set_message($check[1], 'error');
+		}
 	}
 }
 
