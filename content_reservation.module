@@ -71,9 +71,13 @@ function render_calendar_div(){
 }
 
 function render_content_link($content_type){
+	return "<a href=\"".content_reservation_get_content_link($content_type)."\">Back to $content_type</a>";
+}
+
+function content_reservation_get_content_link($content_type){
 	global $base_url;
 	$readable = get_readable_content_type($content_type);
-	return "<a href=\"$base_url/reservations/r/$content_type\" class=\"content_link\">Back to all $readable reservations</a><br />";
+	return $base_url."/reservations/r/".$content_type;
 }
 
 function convert_unix_time($datetime){
@@ -221,8 +225,9 @@ function content_reservation_cron(){
  * TODO remap this to /type/$content_type and /id/$content_id, using var for
  * 	request type and var for request content like the json url scheme
  * TDOO Add a main page that lists all content type and map it to a url via hook_menu
+ * TODO Make the events editable with proper permissions
  */
-function content_reservation_reserve($content_type = NULL, $content_id = NULL){
+function content_reservation_reserve($content_type = NULL, $content_id = NULL, $reservation_id = NULL){
 	global $user, $base_url;
 	drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
 	drupal_add_js(drupal_get_path('module', 'content_reservation') . '/lib/fullcalendar/jquery/' . variable_get("fc_jquery_filename", update_fc_jquery_fname()));
@@ -254,25 +259,20 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL){
 			drupal_set_message("Content with nid #$content_id could not be found.", 'warning');
 			return render_content_link($content_type);
 		}
-		drupal_set_title("Reserve ".$content_title);
+		drupal_set_title($content_title);
 		drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
 		$event_list_json = content_reservation_json("nid", $content_id);
 		drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
-		// TODO Move this to a theme
-		//$to_return = render_content_link($content_type);
 		$to_return = array();
-		$to_return['content_link'] = render_content_link($content_type);
-		//$to_return .= drupal_get_form('content_reservation_reservation_form', $content_id);
+		$to_return['content_link'] = content_reservation_get_content_link($content_type);
+		$to_return['content_title'] = get_readable_content_type($content_type);
 		$to_return['reservation_form'] = drupal_get_form('content_reservation_reservation_form', $content_id);
-		//$to_return .= render_calendar_div();
 		$to_return['calendar_div'] = render_calendar_div();
 		// Let them set settings for this content if they have 'administer reservations' privelages
 		if(user_access('administer reservations', $user)){
-			//$to_return .= drupal_get_form('content_reservation_content_admin_form', $content_id);
 			$to_return['admin_form'] = drupal_get_form('content_reservation_content_admin_form', $content_id);
 			
 		}
-		//return $to_return;
 		return theme("content_reservation_reserve", $to_return);
 	} else {
 		return "No content type specified";
@@ -286,38 +286,33 @@ function content_reservation_reservation_form($form_state, $content_id){
 	$form['div_tag'] = array(
 		'#type' => 'markup',
 		'#value' => '<div class="reservation_form">');
-	$form['time'] = array(
+	$form['event'] = array(
 		'#type' => 'fieldset',
-		'#title' => t('Reservation Time'),
-		'#attributes' => array('class' => 'timeRangeFieldset')
-	);
-	$form['time']['start'] = array(
+		'#title'=> t('Add an Event'),
+		'#attributes' => array('class' => 'fieldset_reservation_form'));
+	$form['event']['start'] = array(
 		'#type' => 'date_select',
 		'#title' => t('From'),
 		'#date_format' => 'm/d/Y - H:i',
 		'#date_year_range' => '0:+1',
 	);
-	$form['time']['end'] = array(
+	$form['event']['end'] = array(
 		'#type' => 'date_select',
 		'#title' => t('To'),
 		'#date_format' => 'm/d/Y - H:i',
 		'#date_year_range' => '0:+1',
 	);
-	$form['description'] = array(
-		'#type' => 'fieldset',
-		'#title' => t('Description'),
-		'#attributes' => array('class' => 'descriptionFieldset')
-	);
-	$form['description']['description'] = array(
+	$form['event']['description'] = array(
 		'#type' => 'textarea',
 		'#description' => t('Short description of reservation purpose'),
-		'#rows' => 4);
+		'#rows' => 4,
+		'#cols' => 15);
 	$form['node_id'] = array(
 		'#type' => 'value',
 		'#value' => $content_id);
-	$form['submit'] = array(
+	$form['event']['submit'] = array(
 		'#type' => 'submit',
-		'#value' => t('Submit'),
+		'#value' => t('Add'),
 		'#submit' => array('content_reservation_reservation_form_submit'));
 	return $form;
 }
@@ -332,7 +327,8 @@ function content_reservation_content_admin_form($form_state, $content_id){
 	$form['settings'] = array(
 		'#type' => 'fieldset',
 		'#title' => t(get_readable_content_title($content_id).' Reservation Settings'),
-		'#collapsible' => true);
+		'#collapsible' => true,
+		'#collapsed' => true);
 	$form['settings']['color'] = array(
 		'#type' => 'textfield',
 		'#title' => t('Content Color'),

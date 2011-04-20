@@ -1,15 +1,3 @@
-.timeRangeFieldset{
-	display: inline-block;
-	float: left;
-	width: 290px;
-	height: 150px;
-}
-
-.descriptionFieldset{
-	display: inline-block;
-	width: 290px;
-}
-
 #content_reservation_list li {
 	background-image: none;
 	font-size: 12pt;
@@ -24,10 +12,20 @@
 
 .content_link {
 	float: right;
+	/*position: relative;
+	top: -15px;*/
 }
 
 #edit-description {
-	
+	width: 270px;
+}
+
+.fieldset_reservation_form {
+
+}
+
+#edit-submit {
+	float: right;
 }
 
 #content_reservation-fullCalendar {
