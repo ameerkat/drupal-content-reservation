@@ -77,7 +77,7 @@ function render_content_link($content_type){
 function content_reservation_get_content_link($content_type){
 	global $base_url;
 	$readable = get_readable_content_type($content_type);
-	return $base_url."/reservations/r/".$content_type;
+	return $base_url."/reservations/r/type/".$content_type;
 }
 
 function convert_unix_time($datetime){
@@ -104,6 +104,10 @@ function content_reservation_make_json($result){
 		$event->color = content_reservation_get_color_var($row->nid);
 		$event->textColor = content_reservation_get_textColor_var($row->nid);
 		$event->allDay = false;
+		if(check_reservation_edit_permissions($row->rid)){
+			global $base_url;
+			$event->url = $base_url."/reservations/r/edit/".$row->rid;
+		}
 		$event_list[] = $event;
 	}
 	return json_encode($event_list);
@@ -220,6 +224,26 @@ function content_reservation_cron(){
 	update_fc_jquery_fname();
 }
 
+function get_nid_from_rid($reservation_id){
+	$result = db_query("SELECT rid, nid FROM {content_reservation} WHERE rid = %d",  $reservation_id);
+	$row = db_fetch_object($result);
+	if($row){
+		return $row->nid;
+	} else {
+		return NULL;
+	}
+}
+
+function get_type_from_nid($nid){
+	$result = db_query("SELECT nid, type FROM {node} WHERE nid = %d",  $nid);
+	$row = db_fetch_object($result);
+	if($row){
+		return $row->type;
+	} else {
+		return NULL;
+	}
+}
+
 /**
  * Reservable content list page callback
  * TODO remap this to /type/$content_type and /id/$content_id, using var for
@@ -227,19 +251,22 @@ function content_reservation_cron(){
  * TDOO Add a main page that lists all content type and map it to a url via hook_menu
  * TODO Make the events editable with proper permissions
  */
-function content_reservation_reserve($content_type = NULL, $content_id = NULL, $reservation_id = NULL){
+function content_reservation_reserve($mode = "type", $key = NULL){//$content_type = NULL, $content_id = NULL, $reservation_id = NULL){
+	// Mode is one of "type", "id", "edit"
 	global $user, $base_url;
 	drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
 	drupal_add_js(drupal_get_path('module', 'content_reservation') . '/lib/fullcalendar/jquery/' . variable_get("fc_jquery_filename", update_fc_jquery_fname()));
 	drupal_add_css(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/fullcalendar/fullcalendar.css');
 	drupal_add_js(drupal_get_path('module', 'content_reservation') .'/lib/fullcalendar/fullcalendar/fullcalendar.js');
-	if($content_type && !$content_id){
+	if($mode == "type" ){
+		$content_type = $key;
+		if($content_type){
 		// There is no content id passed in so we just display the default
 		// content reservation list
 		$content_list = array();
 		$result = db_query("SELECT * FROM {node} WHERE type = '%s'",  $content_type);
 		while ($row = db_fetch_object($result)) {
-			$row->reservation_url = $base_url."/reservations/r/".$content_type."/".$row->nid;
+			$row->reservation_url = $base_url."/reservations/r/id/".$row->nid;
 			$content_list[] = $row;
 		}
 		if(!empty($content_list)){
@@ -253,7 +280,21 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL, $
 		} else {
 			return "No content found for this content type";
 		}
-	} elseif ($content_type && $content_id) {
+		} else {
+			// No content type specified
+		}
+	} else if ($mode == "id" || $mode == "edit"){
+		if($mode == "id"){
+			$content_id = $key;
+		} else {
+			$reservation_id = $key;
+			if(!check_reservation_edit_permissions($reservation_id)){
+				drupal_set_message("You do not have permission to edit this reservation", "error");
+				return "";
+			}
+			$content_id = get_nid_from_rid($reservation_id);
+		}
+		$content_type = get_type_from_nid($content_id);
 		$content_title = get_readable_content_title($content_id);
 		if(!$content_title){
 			drupal_set_message("Content with nid #$content_id could not be found.", 'warning');
@@ -278,11 +319,11 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL, $
 		}
 		return theme("content_reservation_reserve", $to_return);
 	} else {
-		return "No content type specified";
+		return "Invalid mode specified";
 	}
 }
 
-/*function check_reservation_edit_permissions($rid){
+function check_reservation_edit_permissions($rid){
 	global $user;
 	if(user_access("modify reservations", $user)){
 		return true;
@@ -296,7 +337,7 @@ function content_reservation_reserve($content_type = NULL, $content_id = NULL, $
 		}
 		return false;
 	}
-}*/
+}
 
 /**
  * Implementation of the reservation form
@@ -338,38 +379,41 @@ function content_reservation_reservation_form($form_state, $content_id, $mode = 
 			'#submit' => array('content_reservation_reservation_form_submit'));
 		return $form;
 	} else if ($mode == "edit") {
-		//if(check_reservation_edit_permissions($rid)){
+		if(check_reservation_edit_permissions($rid)){
+			$result = db_query("SELECT start, end, description FROM {content_reservation} WHERE rid = %d", $rid);
+			$row = db_fetch_object($result);
 			$form = array();
 			$form['div_tag'] = array(
 				'#type' => 'markup',
 				'#value' => '<div class="reservation_form">');
 			$form['event'] = array(
 				'#type' => 'fieldset',
-				'#title'=> t('Add an Event'),
+				'#title'=> t('Edit Event'),
 				'#attributes' => array('class' => 'fieldset_reservation_form'));
 			$form['event']['start'] = array(
 				'#type' => 'date_select',
 				'#title' => t('From'),
 				'#date_format' => 'm/d/Y - H:i',
 				'#date_year_range' => '0:+1',
-			);
+				'#default_value' => $row->start);
 			$form['event']['end'] = array(
 				'#type' => 'date_select',
 				'#title' => t('To'),
 				'#date_format' => 'm/d/Y - H:i',
 				'#date_year_range' => '0:+1',
-			);
+				'#default_value' => $row->end);
 			$form['event']['description'] = array(
 				'#type' => 'textarea',
 				'#description' => t('Short description of reservation purpose'),
 				'#rows' => 4,
-				'#cols' => 15);
+				'#cols' => 15,
+				'#default_value' => $row->description);
 			$form['node_id'] = array(
 				'#type' => 'value',
 				'#value' => $content_id);
 			$form['reservation_id'] = array(
 				'#type' => 'value',
-				'#value' => $reservation_id);
+				'#value' => $rid);
 			$form['event']['delete'] = array(
 				'#type' => 'submit',
 				'#value' => t('Delete'),
@@ -380,7 +424,14 @@ function content_reservation_reservation_form($form_state, $content_id, $mode = 
 				'#validate' => array('content_reservation_reservation_form_validate'),
 				'#submit' => array('content_reservation_reservation_form_edit'));
 			return $form;
-		//}
+		}
+	}
+}
+
+function content_reservation_reservation_form_delete($form, &$form_state){
+	if(db_query("DELETE FROM {content_reservation} WHERE rid = %d", $form_state['values']['reservation_id'])){
+		drupal_set_message("Event was deleted succesfully");
+		drupal_goto("reservations/r/id/".$form_state['values']['node_id']);
 	}
 }
 
