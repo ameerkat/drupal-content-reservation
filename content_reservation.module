@@ -308,9 +308,9 @@ function content_reservation_reserve($mode = "type", $key = NULL){//$content_typ
 		$to_return['content_link'] = content_reservation_get_content_link($content_type);
 		$to_return['content_title'] = get_readable_content_type($content_type);
 		if($reservation_id){
-			$to_return['reservation_form'] = drupal_get_form('content_reservation_reservation_form', $content_id, 'edit', $reservation_id);
+			$to_return['reservation_form'] = drupal_get_form('content_reservation_reservation_edit_form', $content_id, $reservation_id);
 		} else {
-			$to_return['reservation_form'] = drupal_get_form('content_reservation_reservation_form', $content_id, 'create');
+			$to_return['reservation_form'] = drupal_get_form('content_reservation_reservation_create_form', $content_id);
 		}
 		$to_return['calendar_div'] = render_calendar_div();
 		// Let them set settings for this content if they have 'administer reservations' privelages
@@ -342,89 +342,87 @@ function check_reservation_edit_permissions($rid){
 /**
  * Implementation of the reservation form
  */
-function content_reservation_reservation_form($form_state, $content_id, $mode = 'create', $rid = 0){
-	if($mode == "create"){
+function content_reservation_reservation_create_form($form_state, $content_id){
+	$form = array();
+	$form['div_tag'] = array(
+		'#type' => 'markup',
+		'#value' => '<div class="reservation_form">');
+	$form['event'] = array(
+		'#type' => 'fieldset',
+		'#title'=> t('Add an Event'),
+		'#attributes' => array('class' => 'fieldset_reservation_form'));
+	$form['event']['start'] = array(
+		'#type' => 'date_select',
+		'#title' => t('From'),
+		'#date_format' => 'm/d/Y - H:i',
+		'#date_year_range' => '0:+1');
+	$form['event']['end'] = array(
+		'#type' => 'date_select',
+		'#title' => t('To'),
+		'#date_format' => 'm/d/Y - H:i',
+		'#date_year_range' => '0:+1');
+	$form['event']['description'] = array(
+		'#type' => 'textarea',
+		'#description' => t('Short description of reservation purpose'),
+		'#rows' => 4,
+		'#cols' => 15);
+	$form['node_id'] = array(
+		'#type' => 'value',
+		'#value' => $content_id);
+	$form['event']['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Add'),
+		'#validate' => array('content_reservation_reservation_form_validate'),
+		'#submit' => array('content_reservation_reservation_create_form_submit'));
+	return $form;
+}
+
+function content_reservation_reservation_edit_form($form_state, $content_id, $rid){
+	if(check_reservation_edit_permissions($rid)){
+		$result = db_query("SELECT start, end, description FROM {content_reservation} WHERE rid = %d", $rid);
+		$row = db_fetch_object($result);
 		$form = array();
 		$form['div_tag'] = array(
 			'#type' => 'markup',
 			'#value' => '<div class="reservation_form">');
 		$form['event'] = array(
 			'#type' => 'fieldset',
-			'#title'=> t('Add an Event'),
+			'#title'=> t('Edit Event'),
 			'#attributes' => array('class' => 'fieldset_reservation_form'));
 		$form['event']['start'] = array(
 			'#type' => 'date_select',
 			'#title' => t('From'),
 			'#date_format' => 'm/d/Y - H:i',
 			'#date_year_range' => '0:+1',
-		);
+			'#default_value' => $row->start);
 		$form['event']['end'] = array(
 			'#type' => 'date_select',
 			'#title' => t('To'),
 			'#date_format' => 'm/d/Y - H:i',
 			'#date_year_range' => '0:+1',
-		);
+			'#default_value' => $row->end);
 		$form['event']['description'] = array(
 			'#type' => 'textarea',
 			'#description' => t('Short description of reservation purpose'),
 			'#rows' => 4,
-			'#cols' => 15);
+			'#cols' => 15,
+			'#default_value' => $row->description);
 		$form['node_id'] = array(
 			'#type' => 'value',
 			'#value' => $content_id);
+		$form['reservation_id'] = array(
+			'#type' => 'value',
+			'#value' => $rid);
+		$form['event']['delete'] = array(
+			'#type' => 'submit',
+			'#value' => t('Delete'),
+			'#submit' => array('content_reservation_reservation_form_delete'));
 		$form['event']['submit'] = array(
 			'#type' => 'submit',
-			'#value' => t('Add'),
-			'#validate' => array('content_reservation_reservation_form_validate'),
-			'#submit' => array('content_reservation_reservation_form_submit'));
+			'#value' => t('Edit'),
+			'#validate' => array('content_reservation_reservation_edit_form_validate'),
+			'#submit' => array('content_reservation_reservation_edit_form_submit'));
 		return $form;
-	} else if ($mode == "edit") {
-		if(check_reservation_edit_permissions($rid)){
-			$result = db_query("SELECT start, end, description FROM {content_reservation} WHERE rid = %d", $rid);
-			$row = db_fetch_object($result);
-			$form = array();
-			$form['div_tag'] = array(
-				'#type' => 'markup',
-				'#value' => '<div class="reservation_form">');
-			$form['event'] = array(
-				'#type' => 'fieldset',
-				'#title'=> t('Edit Event'),
-				'#attributes' => array('class' => 'fieldset_reservation_form'));
-			$form['event']['start'] = array(
-				'#type' => 'date_select',
-				'#title' => t('From'),
-				'#date_format' => 'm/d/Y - H:i',
-				'#date_year_range' => '0:+1',
-				'#default_value' => $row->start);
-			$form['event']['end'] = array(
-				'#type' => 'date_select',
-				'#title' => t('To'),
-				'#date_format' => 'm/d/Y - H:i',
-				'#date_year_range' => '0:+1',
-				'#default_value' => $row->end);
-			$form['event']['description'] = array(
-				'#type' => 'textarea',
-				'#description' => t('Short description of reservation purpose'),
-				'#rows' => 4,
-				'#cols' => 15,
-				'#default_value' => $row->description);
-			$form['node_id'] = array(
-				'#type' => 'value',
-				'#value' => $content_id);
-			$form['reservation_id'] = array(
-				'#type' => 'value',
-				'#value' => $rid);
-			$form['event']['delete'] = array(
-				'#type' => 'submit',
-				'#value' => t('Delete'),
-				'#submit' => array('content_reservation_reservation_form_delete'));
-			$form['event']['submit'] = array(
-				'#type' => 'submit',
-				'#value' => t('Edit'),
-				'#validate' => array('content_reservation_reservation_form_validate'),
-				'#submit' => array('content_reservation_reservation_form_edit'));
-			return $form;
-		}
 	}
 }
 
@@ -478,11 +476,15 @@ function content_reservation_json_print($query_type, $query_key){
  * Helper function to check for scheduling conflicts
  * Returns a conflict message if true, NULL otherwise
  */
-function check_for_conflicts($nid, $start, $end){
+function check_for_conflicts($nid, $start, $end, $exclusion_id = NULL){
 	if($end < $start){
 		return array(0, "Event can not end before it starts, please check times.");
 	}
-	$result = db_query("SELECT rid, start, end, description FROM {content_reservation} WHERE nid = %d",  $nid);
+	if(!$exclusion_id){
+		$result = db_query("SELECT rid, start, end, description FROM {content_reservation} WHERE nid = %d",  $nid);
+	} else {
+		$result = db_query("SELECT rid, start, end, description FROM {content_reservation} WHERE nid = %d AND rid <> %d",  $nid, $exclusion_id);
+	}
 	while ($row = db_fetch_object($result)) {
 		if (($start > $row->start && $start < $row->end) || ($end > $row->start && $end < $row->end)) {
 			return array($row->rid, "Could not create event, conflicts with: $row->description @ $row->start");
@@ -505,12 +507,26 @@ function content_reservation_reservation_form_validate($form, &$form_state){
 }
 
 /**
+ * Implementation of the reservation form validation hanlder
+ */
+function content_reservation_reservation_edit_form_validate($form, &$form_state){
+	$check = check_for_conflicts($form_state['values']['node_id'], $form_state['values']['start'], $form_state['values']['end'], $form_state['values']['reservation_id']);
+	if($check[1]){
+		form_set_error('', $check[1]);
+	}
+	if($form_state['values']['description'] == ''){
+		form_set_error('', "Please enter a basic description.");
+	}
+}
+
+/**
  * Implementation of the reservation form submit handler
  */
-function content_reservation_reservation_form_submit($form, &$form_state){
+function content_reservation_reservation_create_form_submit($form, &$form_state){
 	// For some reason we got double posts so I'm going to check for validity here
 	if(isset($form_state['values']['start']) &&
-		isset($form_state['values']['end'])){
+		isset($form_state['values']['end']) &&
+		isset($form_state['values']['description'])){
 		$check = check_for_conflicts($form_state['values']['node_id'], $form_state['values']['start'], $form_state['values']['end']);
 		if(!$check[1]){
 			global $user;
@@ -526,6 +542,28 @@ function content_reservation_reservation_form_submit($form, &$form_state){
 		}
 	}
 }
+
+function content_reservation_reservation_edit_form_submit($form, &$form_state){
+	// For some reason we got double posts so I'm going to check for validity here
+	if(isset($form_state['values']['start']) &&
+		isset($form_state['values']['end']) &&
+		isset($form_state['values']['description'])){
+		$check = check_for_conflicts($form_state['values']['node_id'], $form_state['values']['start'], $form_state['values']['end'], $form_state['values']['reservation_id']);
+		if(!$check[1]){
+			global $user;
+			$start = $form_state['values']['start'];
+			$end = $form_state['values']['end'];
+			$description = $form_state['values']['description'];
+			$uid = $user->uid;
+			$rid = $form_state['values']['reservation_id'];
+			db_query("UPDATE {content_reservation} SET description='%s', start=%d, end=%d, modified=NOW() WHERE rid = %d", $description, $start, $end, $rid);
+			drupal_set_message('Event has been updated.');
+		} else {
+			drupal_set_message($check[1], 'error');
+		}
+	}
+}
+
 /**
  * Implementation of the admin settings form submit handler
  */
