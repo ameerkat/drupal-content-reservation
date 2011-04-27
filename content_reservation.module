@@ -92,6 +92,18 @@ function convert_unix_time($datetime){
 	return mktime($hour, $minute, $second, $month, $day, $year);
 }
 
+// Prevents relookup of the user id
+function check_reservation_edit_permissions_user($uid){
+	global $user;
+	if(user_access("", $user)){
+		return true;
+	} else if($user->uid == $uid) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 function content_reservation_make_json($result){
 	$event_list = Array();
 	while ($row = db_fetch_object($result)) {
@@ -104,7 +116,7 @@ function content_reservation_make_json($result){
 		$event->color = content_reservation_get_color_var($row->nid);
 		$event->textColor = content_reservation_get_textColor_var($row->nid);
 		$event->allDay = false;
-		if(check_reservation_edit_permissions($row->rid)){
+		if(check_reservation_edit_permissions_user($row->uid)){
 			global $base_url;
 			$event->url = $base_url."/reservations/r/edit/".$row->rid;
 		}
