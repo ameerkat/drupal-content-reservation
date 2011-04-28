@@ -3,8 +3,6 @@
  * Module that enables users to reserve drupal nodes for specified periods 
  * of time.
  * @author Ameer Ayoub <ameer.ayoub@asu.edu>
- *
- * @todo Make events editable
  * @todo Make admin page with list of content for opt-in enable
  * @todo Human readable time on the conflict resolution message
  * @todo Hook into views and panels, and possible provide block for calendar
