@@ -26,14 +26,13 @@ variable to be updated if the packaged version of jquery changes, or manually
 execute update_fc_jquery_fname(); somehow.
 
 ## todo list
-* Make admin page with list of content for opt-in enable
+* Make admin page with list of content for whitelist enable
 * Human readable time on the conflict resolution message
 * Hook into views and panels, and possible provide block for calendar
-* Pull the default colors from a system wide variable
-* Throw a serialized error on invalid query
-* Change url scheme to work off of get params instead of url slugs for JSON
-* Consider making a separate database table as these may get large
-* Append content_reservation_ to the beginning of these so as not to conflict
-* Add a main page that lists all content type and map it to a url via hook_menu
-* Make the events editable with proper permissions
-* Make exclusion an array of ids
+* Pull the default colors from a system wide variable/admin setting
+* Throw a serialized json error on invalid query
+* Change url scheme to work off of get params instead of url slugs for json queries
+* Consider making a separate database table for content calendar colors as these may get large
+* Append content_reservation_ to the beginning of all functions
+* Add a main page that lists all content type and map it to a url
+* Make exclusion an array of ids vs singular id in the conflict lookup
