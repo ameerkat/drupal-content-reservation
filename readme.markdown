@@ -18,6 +18,9 @@
 * Modified (modified)
 
 ## Installation Notes
+If you download the latest dev version there is no fullcalendar, you have
+to install it separately see the notes in /lib/README
+
 The calendar display uses a higher version of jquery and is incompatible with 
 the jquery packaged with drupal, therefore the module searches for the appropriate
 version on first run. Once it finds a version then it stores that internally,
