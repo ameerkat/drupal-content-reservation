@@ -276,7 +276,7 @@ function template_preprocess_content_reservation_list(&$variables){
 /**
  * Implementation of hook_theme()
  */
-function content_reservation_theme() {
+function content_reservation_theme(){
 	return array(
 		'content_reservation_list' => array(
 			'template' => 'content_reservation_list',
@@ -289,8 +289,7 @@ function content_reservation_theme() {
 		'content_reservation_fullcalendar_js' => array(
 			'template' => 'content_reservation_fullcalendar_js',
 			'arguments' => array('event_list' => NULL),
-		),
-	);
+		));
 }
 
 /**
@@ -352,7 +351,6 @@ function get_type_from_nid($nid){
  * @todo Make the events editable with proper permissions
  */
 function content_reservation_reserve($mode = "type", $key = NULL){
-	// Mode is one of "type", "id", "edit"
 	global $user, $base_url;
 	$module_path = drupal_get_path('module', 'content_reservation');
 	drupal_add_css($module_path.'/content-reservation.css');
@@ -362,27 +360,27 @@ function content_reservation_reserve($mode = "type", $key = NULL){
 	if($mode == "type" ){
 		$content_type = $key;
 		if($content_type){
-		// There is no content id passed in so we just display the default
-		// content reservation list
-		$content_list = array();
-		$result = db_query("SELECT * FROM {node} WHERE type = '%s'",  $content_type);
-		while ($row = db_fetch_object($result)) {
-			$row->reservation_url = $base_url."/reservations/r/id/".$row->nid;
-			$content_list[] = $row;
-		}
-		if(!empty($content_list)){
-			$content_name = get_readable_content_type($content_type);
-			if($content_name){
-				drupal_set_title("Available ".$content_name." Reservations");
+			// There is no content id passed in so we just display the default
+			// content reservation list
+			$content_list = array();
+			$result = db_query("SELECT * FROM {node} WHERE type = '%s'",  $content_type);
+			while ($row = db_fetch_object($result)) {
+				$row->reservation_url = $base_url."/reservations/r/id/".$row->nid;
+				$content_list[] = $row;
 			}
-			$event_list_json = content_reservation_json("type", $content_type);
-			drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
-			return theme("content_reservation_list", $content_list);
-		} else {
-			drupal_set_message("No content found for this content type",
-				"warning");
-			return "";
-		}
+			if(!empty($content_list)){
+				$content_name = get_readable_content_type($content_type);
+				if($content_name){
+					drupal_set_title("Available ".$content_name." Reservations");
+				}
+				$event_list_json = content_reservation_json("type", $content_type);
+				drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
+				return theme("content_reservation_list", $content_list);
+			} else {
+				drupal_set_message("No content found for this content type",
+					"warning");
+				return "";
+			}
 		} else {
 			// No content type specified
 			drupal_set_message("No content type specified",
@@ -427,8 +425,12 @@ function content_reservation_reserve($mode = "type", $key = NULL){
 			$to_return['admin_form'] = drupal_get_form('content_reservation_content_admin_form', $content_id);
 		}
 		return theme("content_reservation_reserve", $to_return);
+		//return print_r($to_return, true);
 	} else {
-		return "Invalid mode specified";
+		drupal_set_message(
+			"Invalid query mode $mode, must be one of type, id, edit", 'error');
+		return "";
+		
 	}
 }
 
@@ -696,14 +698,14 @@ function content_reservation_menu() {
 		'title' => 'Reservations',
 		'description' => 'Lists reservable content',
 		'page callback' => 'content_reservation_reserve',
-		'access arguments' => array('view reservation'),
+		'access arguments' => array('view reservations'),
 		'type' => MENU_CALLBACK,
 	);
 	$items['reservations/j'] = array(
 		'title' => 'Reservations JSON',
 		'description' => 'Returns reservation information wrapped in json',
 		'page callback' => 'content_reservation_json_print',
-		'access arguments' => array('view reservation'),
+		'access arguments' => array('view reservations'),
 		'type' => MENU_CALLBACK,
 	);
 	return $items;
