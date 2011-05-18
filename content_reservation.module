@@ -258,7 +258,7 @@ function content_reservation_set_textColor_var($nid, $color){
  */
 function content_reservation_perm(){
 	return array('view reservations', 'create reservations', 
-		'modify all reservations', 'administer reservations');
+		'modify reservations', 'administer reservations');
 }
 
 /**
