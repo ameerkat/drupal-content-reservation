@@ -339,6 +339,16 @@ function get_type_from_nid($nid){
 }
 
 /**
+ * Implementation of hook_init
+ */
+function content_reservation_init(){
+	// Disable Caching
+	if (drupal_match_path($_GET['q'], 'reservations/*')){
+		$GLOBALS['conf']['cache'] = FALSE;
+	}
+}
+
+/**
  * Reservable content list page callback
  * @param string $mode either type, id, or edit; if type then returns a list of
  *	reservable content for that type, if id then return a form/calendar to
