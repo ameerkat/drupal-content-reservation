@@ -29,10 +29,12 @@ variable to be updated if the packaged version of jquery changes, or manually
 execute update_fc_jquery_fname(); somehow.
 
 ## todo list
+
 ### High Priority
 * Adjustable reservation granularity
 * Optional event moderation queue
 * Adjustable time ranges for reservations
+
 ### Low Priority
 * Make admin page with list of content for whitelist enable
 * Human readable time on the conflict resolution message
@@ -44,3 +46,4 @@ execute update_fc_jquery_fname(); somehow.
 * Append content_reservation_ to the beginning of all functions
 * Add a main page that lists all content type and map it to a url
 * Make exclusion an array of ids vs singular id in the conflict lookup
+
