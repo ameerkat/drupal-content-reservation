@@ -3,9 +3,7 @@
  * Module that enables users to reserve drupal nodes for specified periods 
  * of time.
  * @author Ameer Ayoub <ameer.ayoub@asu.edu>
- * @todo Make admin page with list of content for opt-in enable
- * @todo Human readable time on the conflict resolution message
- * @todo Hook into views and panels, and possible provide block for calendar
+ * @todo see readme for todo list
  */
 
 /**
@@ -31,11 +29,11 @@ class FullcalendarEvent{
 
 /**
  * Encapsulation of module wide settings into ContentReservation namespace
- * @todo Pull the default colors from a system wide variable
  */
 class ContentReservation {
 	public static $default_color = "#004f45";
 	public static $default_textColor = "#ffffff";
+	public static $default_dateFormat = "m/d/Y - H:i";
 }
 
 /**
@@ -198,8 +196,6 @@ function content_reservation_make_json($result){
 /**
  * Returns reservation events as serialized json FullCalender event object 
  * arrays based on various search queries.
- * @todo Throw a serialized error on invalid query
- * @todo Change url scheme to work off of get params instead of url slugs
  * @param string $query_type The type of query to be executed one of
  * `{type, nid, uid}. For querying on the content type, associated content node,
  * 	or associated user respectively.
@@ -224,9 +220,8 @@ function content_reservation_json($query_type, $query_key){
 }
 
 /**
- * Some helper function for getting and setting content calendar colors
- * @todo Consider making a separate database table as these may get large
- * @todo Append content_reservation_ to the beginning of these so as not to conflict
+ * Some helper function for getting and setting content calendar colors, and date
+ *	format, all content specific variables.
  */
 function content_reservation_get_color_var($nid){
 	$var_name = "nid_". $nid . "_color";
@@ -236,6 +231,16 @@ function content_reservation_get_color_var($nid){
 function content_reservation_set_color_var($nid, $color){
 	$var_name = "nid_". $nid . "_color";
 	return variable_set($var_name, $color);
+}
+
+function content_reservation_set_dateFormat_var($nid, $dateFormat){
+	$var_name = "nid_". $nid . "_dateFormat";
+	return variable_set($var_name, $dateFormat);
+}
+
+function content_reservation_get_dateFormat_var($nid){
+	$var_name = "nid_". $nid . "_dateFormat";
+	return variable_get($var_name, ContentReservation::$default_dateFormat);
 }
 
 function content_reservation_get_textColor_var($nid){
@@ -357,8 +362,6 @@ function content_reservation_init(){
  *	of the machine type for the type mode, or a node id for the id mode or
  *	the reservation id for the edit mode
  * @return string
- * @todo Add a main page that lists all content type and map it to a url via hook_menu
- * @todo Make the events editable with proper permissions
  */
 function content_reservation_reserve($mode = "type", $key = NULL){
 	global $user, $base_url;
@@ -459,12 +462,12 @@ function content_reservation_reservation_create_form($form_state, $content_id){
 	$form['event']['start'] = array(
 		'#type' => 'date_select',
 		'#title' => t('From'),
-		'#date_format' => 'm/d/Y - H:i',
+		'#date_format' => content_reservation_get_dateFormat_var($content_id),
 		'#date_year_range' => '0:+1');
 	$form['event']['end'] = array(
 		'#type' => 'date_select',
 		'#title' => t('To'),
-		'#date_format' => 'm/d/Y - H:i',
+		'#date_format' => content_reservation_get_dateFormat_var($content_id),
 		'#date_year_range' => '0:+1');
 	$form['event']['description'] = array(
 		'#type' => 'textarea',
@@ -497,13 +500,13 @@ function content_reservation_reservation_edit_form($form_state, $content_id, $ri
 		$form['event']['start'] = array(
 			'#type' => 'date_select',
 			'#title' => t('From'),
-			'#date_format' => 'm/d/Y - H:i',
+			'#date_format' => content_reservation_get_dateFormat_var($content_id),
 			'#date_year_range' => '0:+1',
 			'#default_value' => $row->start);
 		$form['event']['end'] = array(
 			'#type' => 'date_select',
 			'#title' => t('To'),
-			'#date_format' => 'm/d/Y - H:i',
+			'#date_format' => content_reservation_get_dateFormat_var($content_id),
 			'#date_year_range' => '0:+1',
 			'#default_value' => $row->end);
 		$form['event']['description'] = array(
@@ -558,10 +561,21 @@ function content_reservation_content_admin_form($form_state, $content_id){
 		'#default_value' => content_reservation_get_color_var($content_id));
 	$form['settings']['textColor'] = array(
 		'#type' => 'textfield',
-		'#title' => t('Content textColor'),
+		'#title' => t('Content Text Color'),
 		'#size' => 10,
 		'#description' => t('Color used to display reservations font for this content on the calendar'),
 		'#default_value' => content_reservation_get_textColor_var($content_id));
+	$form['settings']['dateFormat'] = array(
+		'#type' => 'select',
+		'#title' => t('Date Format Granularity'),
+		'#default_value' => content_reservation_get_dateFormat_var($content_id),
+		'#options' => array(
+			'm/d/Y - H:i' => t('Minutes'),
+			'm/d/Y - H' => t('Hours'),
+			'm/d/Y' => t('Day'),
+			'm/Y' => t('Month'),
+			'Y' => t('Year')),
+		'#description' => t('Reservation date format granularity.'));
 	$form['node_id'] = array(
 		'#type' => 'value',
 		'#value' => $content_id);
@@ -588,7 +602,6 @@ function content_reservation_json_print($query_type, $query_key){
  * @param integer $exclusion_id id of the reservation to excluse in the search
  *	in the case that you want to move a reservation without conflicting with
  *	itself. defaults to null.
- * @todo make exclusion an array of ids
  */
 function check_for_conflicts($nid, $start, $end, $exclusion_id = NULL){
 	if($end < $start){
@@ -690,12 +703,43 @@ function content_reservation_reservation_edit_form_submit($form, &$form_state){
  * Implementation of the admin settings form submit handler
  */
 function content_reservation_content_admin_form_submit($form, &$form_state){
-	if(isset($form_state['values']['color']) &&
-		isset($form_state['values']['textColor'])){
-		$nid = $form_state['values']['node_id'];
-		content_reservation_set_color_var($nid, $form_state['values']['color']);
-		content_reservation_set_textColor_var($nid, $form_state['values']['textColor']);
-		drupal_set_message('Content settings have been updated.');
+	$nid = $form_state['values']['node_id'];
+	$updated = array(
+			"color" => array("title" => "Color", "modified" => false),
+			"textColor" => array("title" => "Text Color", "modified" => false),
+			"dateFormat" => array("title" => "Date Format Granularity", "modified" => false));
+	if(isset($form_state['values']['color'])){
+		if(content_reservation_get_color_var($nid) != $form_state['values']['color']){
+			content_reservation_set_color_var($nid, $form_state['values']['color']);
+			$updated['color']['modified'] = true;
+		}
+	}
+	if(isset($form_state['values']['textColor'])){
+		if(content_reservation_get_textColor_var($nid) != $form_state['values']['textColor']){
+			content_reservation_set_textColor_var($nid, $form_state['values']['textColor']);
+			$updated['textColor']['modified'] = true;
+		}
+	}
+	if(isset($form_state['values']['dateFormat'])){
+		if(content_reservation_get_dateFormat_var($nid) != $form_state['values']['dateFormat']){
+			content_reservation_set_dateFormat_var($nid, $form_state['values']['dateFormat']);
+			$updated['dateFormat']['modified'] = true;
+		}
+	}
+	$first = true;
+	$updated_var_string = "";
+	foreach ($updated as $v){
+		if ($v["modified"]) {
+			if ($first){
+				$updated_var_string .= $v["title"];
+				$first =  false;
+			} else {
+				$updated_var_string .= ", ".$v["title"];
+			}
+		}
+	}
+	if (!empty($updated_var_string)){
+		drupal_set_message($updated_var_string.' has been updated.');
 	}
 }
 
@@ -720,3 +764,4 @@ function content_reservation_menu() {
 	);
 	return $items;
 }
+

@@ -28,12 +28,13 @@ if you update fullcalendar after a first install you must run cron for this
 variable to be updated if the packaged version of jquery changes, or manually
 execute update_fc_jquery_fname(); somehow.
 
-## todo list
+## Todo list
 
 ### High Priority
-* Adjustable reservation granularity
+* Fix reservation granularity formatting issue (changing granularity causes date to be incorrect when entered)
 * Optional event moderation queue
 * Adjustable time ranges for reservations
+* Generalize the set var functions
 
 ### Low Priority
 * Make admin page with list of content for whitelist enable
