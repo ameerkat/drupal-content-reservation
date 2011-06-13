@@ -31,7 +31,6 @@ execute update_fc_jquery_fname(); somehow.
 ## Todo list
 
 ### High Priority
-* Fix reservation granularity formatting issue (changing granularity causes date to be incorrect when entered)
 * Optional event moderation queue
 * Adjustable time ranges for reservations
 * Generalize the set var functions

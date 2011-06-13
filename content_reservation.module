@@ -34,6 +34,7 @@ class ContentReservation {
 	public static $default_color = "#004f45";
 	public static $default_textColor = "#ffffff";
 	public static $default_dateFormat = "m/d/Y - H:i";
+	public static $default_dateIncrement = 1;
 }
 
 /**
@@ -271,6 +272,16 @@ function content_reservation_get_dateFormat_var($nid){
 	return variable_get($var_name, ContentReservation::$default_dateFormat);
 }
 
+function content_reservation_get_dateIncrement_var($nid){
+	$var_name = "nid_".$nid."_dateIncrement";
+	return variable_get($var_name, ContentReservation::$default_dateIncrement);
+}
+
+function content_reservation_set_dateIncrement_var($nid, $dateIncrement){
+	$var_name = "nid_". $nid . "_dateIncrement";
+	return variable_set($var_name, $dateIncrement);
+}
+
 function content_reservation_get_textColor_var($nid){
 	$var_name = "nid_". $nid . "_textColor";
 	return variable_get($var_name, ContentReservation::$default_textColor);
@@ -491,12 +502,14 @@ function content_reservation_reservation_create_form($form_state, $content_id){
 		'#type' => 'date_select',
 		'#title' => t('From'),
 		'#date_format' => content_reservation_get_dateFormat_var($content_id),
-		'#date_year_range' => '0:+1');
+		'#date_year_range' => '0:+1',
+		'#date_increment' => content_reservation_get_dateIncrement_var($content_id));
 	$form['event']['end'] = array(
 		'#type' => 'date_select',
 		'#title' => t('To'),
 		'#date_format' => content_reservation_get_dateFormat_var($content_id),
-		'#date_year_range' => '0:+1');
+		'#date_year_range' => '0:+1',
+		'#date_increment' => content_reservation_get_dateIncrement_var($content_id));
 	$form['event']['description'] = array(
 		'#type' => 'textarea',
 		'#description' => t('Short description of reservation purpose'),
@@ -530,12 +543,14 @@ function content_reservation_reservation_edit_form($form_state, $content_id, $ri
 			'#title' => t('From'),
 			'#date_format' => content_reservation_get_dateFormat_var($content_id),
 			'#date_year_range' => '0:+1',
+			'#date_increment' => content_reservation_get_dateIncrement_var($content_id),
 			'#default_value' => $row->start);
 		$form['event']['end'] = array(
 			'#type' => 'date_select',
 			'#title' => t('To'),
 			'#date_format' => content_reservation_get_dateFormat_var($content_id),
 			'#date_year_range' => '0:+1',
+			'#date_increment' => content_reservation_get_dateIncrement_var($content_id),
 			'#default_value' => $row->end);
 		$form['event']['description'] = array(
 			'#type' => 'textarea',
@@ -604,6 +619,12 @@ function content_reservation_content_admin_form($form_state, $content_id){
 			'm/Y' => t('Month'),
 			'Y' => t('Year')),
 		'#description' => t('Reservation date format granularity.'));
+	$form['settings']['dateIncrement'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Date Increment'),
+		'#size' => 10,
+		'#default_value' => content_reservation_get_dateIncrement_var($content_id),
+		'#description' => t('Sets the increments of the lowest granularity selector'));
 	$form['node_id'] = array(
 		'#type' => 'value',
 		'#value' => $content_id);
@@ -735,7 +756,8 @@ function content_reservation_content_admin_form_submit($form, &$form_state){
 	$updated = array(
 			"color" => array("title" => "Color", "modified" => false),
 			"textColor" => array("title" => "Text Color", "modified" => false),
-			"dateFormat" => array("title" => "Date Format Granularity", "modified" => false));
+			"dateFormat" => array("title" => "Date Format Granularity", "modified" => false),
+			"dateIncrement" => array("title" => "Date Increment", "modified" => false));
 	if(isset($form_state['values']['color'])){
 		if(content_reservation_get_color_var($nid) != $form_state['values']['color']){
 			content_reservation_set_color_var($nid, $form_state['values']['color']);
@@ -752,6 +774,12 @@ function content_reservation_content_admin_form_submit($form, &$form_state){
 		if(content_reservation_get_dateFormat_var($nid) != $form_state['values']['dateFormat']){
 			content_reservation_set_dateFormat_var($nid, $form_state['values']['dateFormat']);
 			$updated['dateFormat']['modified'] = true;
+		}
+	}
+	if(isset($form_state['values']['dateIncrement'])){
+		if(content_reservation_get_dateIncrement_var($nid) != $form_state['values']['dateIncrement']){
+			content_reservation_set_dateIncrement_var($nid, $form_state['values']['dateIncrement']);
+			$updated['dateIncrement']['modified'] = true;
 		}
 	}
 	$first = true;
