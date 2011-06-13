@@ -777,9 +777,13 @@ function content_reservation_content_admin_form_submit($form, &$form_state){
 		}
 	}
 	if(isset($form_state['values']['dateIncrement'])){
-		if(content_reservation_get_dateIncrement_var($nid) != $form_state['values']['dateIncrement']){
-			content_reservation_set_dateIncrement_var($nid, $form_state['values']['dateIncrement']);
-			$updated['dateIncrement']['modified'] = true;
+		if (is_numeric($form_state['values']['dateIncrement'])){
+			if(content_reservation_get_dateIncrement_var($nid) != $form_state['values']['dateIncrement']){
+				content_reservation_set_dateIncrement_var($nid, $form_state['values']['dateIncrement']);
+				$updated['dateIncrement']['modified'] = true;
+			}
+		} else {
+			drupal_set_message("Date Increment must be numeric", error);
 		}
 	}
 	$first = true;
