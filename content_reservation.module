@@ -124,6 +124,34 @@ function convert_unix_time($datetime){
 }
 
 /**
+ * Converts the input mysql date time into an ISO 8601 date time for use with
+ * fullcalender jquery plugin.
+ * format of in yyyy-mm-dd hh:mm:ss
+ * @param string $datetime The formatted date time
+ * @return integer
+ */
+function convert_iso8601_time($datetime){
+	/*$pattern = '/(\d{4})-(\d{2})-(\d{2})\s*(\d{2}):(\d{2}):(\d{2})/';
+	if (preg_match($pattern, $datetime, $matches) > 0){
+		$year = $matches[1];
+		$month = $matches[2];
+		$day = $matches[3];
+		$hour = $matches[4];
+		$minute = $matches[5];
+		$second = $matches[6];
+		return $year."-".$month."-".$day."T".$hour.":".$minute.":".$second;*/
+	$nt = str_replace(" ", "T", $datetime, $rc);
+	if ($rc > 0){
+		return $nt;
+	} else {
+		drupal_set_message(
+			"convert_iso8601_time: Incorrect date time format, date time must be in the format ".
+			"yyyy-mmm-dd hh:mm:ss", "error");
+		return 0;
+	}
+}
+
+/**
  * Whether the current logged in user has permissions to edit the reservation
  * @param integer $id Either ther user id or the reservation id of the 
  * 	reservation being checked for edit permission.
@@ -179,8 +207,8 @@ function content_reservation_make_json($result){
 		$event->id = $row->rid;
 		$event->title = $row->description;
 		// Convert times to fullcalendar compatible unix timestamp
-		$event->start = convert_unix_time($row->start);
-		$event->end = convert_unix_time($row->end);
+		$event->start = convert_iso8601_time($row->start);
+		$event->end = convert_iso8601_time($row->end);
 		$event->color = content_reservation_get_color_var($row->nid);
 		$event->textColor = content_reservation_get_textColor_var($row->nid);
 		$event->allDay = false;
@@ -604,8 +632,8 @@ function content_reservation_json_print($query_type, $query_key){
  *	itself. defaults to null.
  */
 function check_for_conflicts($nid, $start, $end, $exclusion_id = NULL){
-	if($end < $start){
-		return array(0, "Event can not end before it starts, please check times.");
+	if($end <= $start){
+		return array(0, "Event can not end before it starts or be 0 length, please check times.");
 	}
 	if(!$exclusion_id){
 		$result = db_query("SELECT rid, start, end, description FROM {content_reservation} WHERE nid = %d",  $nid);
@@ -636,7 +664,7 @@ function content_reservation_reservation_form_validate($form, &$form_state){
 }
 
 /**
- * Implementation of the reservation form validation hanlder
+ * Implementation of the reservation form validation hanlder for the edit form
  */
 function content_reservation_reservation_edit_form_validate($form, &$form_state){
 	$check = check_for_conflicts($form_state['values']['node_id'], 
@@ -691,7 +719,7 @@ function content_reservation_reservation_edit_form_submit($form, &$form_state){
 			$description = $form_state['values']['description'];
 			$uid = $user->uid;
 			$rid = $form_state['values']['reservation_id'];
-			db_query("UPDATE {content_reservation} SET description='%s', start=%d, end=%d, modified=NOW() WHERE rid = %d", $description, $start, $end, $rid);
+			db_query("UPDATE {content_reservation} SET description='%s', start='%s', end='%s', modified=NOW() WHERE rid = %d", $description, $start, $end, $rid);
 			drupal_set_message('Event has been updated.');
 		} else {
 			drupal_set_message($check[1], 'error');
