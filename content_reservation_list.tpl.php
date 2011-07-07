@@ -3,7 +3,7 @@
 <table><tr><td>
 <div id="content_reservation-fullCalendar"></div>
 </div>
-</td><td style="width: 200px;">
+</td><td style="width: 200px;" id="content_reservation_list_td">
 <ul id="content_reservation_list" class="content_reservation">
 <?php foreach($content_list as $reservable_content): ?>
 	<li><div class="colorBlock" style="background-color: <?php echo $reservable_content->color; ?>;"></div><a href="<?php echo $reservable_content->reservation_url; ?>"><?php echo $reservable_content->title; ?></a></li>

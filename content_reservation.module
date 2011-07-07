@@ -413,6 +413,7 @@ function content_reservation_reserve($mode = "type", $key = NULL){
 	drupal_add_js($module_path.'/lib/fullcalendar/jquery/'.variable_get("fc_jquery_filename", update_fc_jquery_fname()));
 	drupal_add_css($module_path.'/lib/fullcalendar/fullcalendar/fullcalendar.css');
 	drupal_add_js($module_path.'/lib/fullcalendar/fullcalendar/fullcalendar.js');
+	jquery_ui_add('ui.resizable');
 	if($mode == "type" ){
 		$content_type = $key;
 		if($content_type){
@@ -497,6 +498,7 @@ function content_reservation_moderate($mode = "type", $key = NULL, $action = NUL
 	drupal_add_js($module_path.'/lib/fullcalendar/jquery/'.variable_get("fc_jquery_filename", update_fc_jquery_fname()));
 	drupal_add_css($module_path.'/lib/fullcalendar/fullcalendar/fullcalendar.css');
 	drupal_add_js($module_path.'/lib/fullcalendar/fullcalendar/fullcalendar.js');
+	jquery_ui_add('ui.resizable');
 	if($mode == "type" ){
 		$content_type = $key;
 	} else {

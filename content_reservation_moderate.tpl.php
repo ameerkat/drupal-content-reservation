@@ -3,7 +3,7 @@
 <table><tr><td>
 <div id="content_reservation-fullCalendar"></div>
 </div>
-</td><td width="400">
+</td><td id="content_reservation_list_td">
 <ul id="content_reservation_list" class="content_reservation">
 <?php foreach($content_list as $event): ?>
 	<li>
