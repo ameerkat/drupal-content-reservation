@@ -31,10 +31,13 @@ execute update_fc_jquery_fname(); somehow.
 ## Todo list
 
 ### Low Priority
+* Menu items
 * Make approve / reject moderation ajax callback function
 * Resizable calendar
 * Pagination
 * Styles
+* Email message to user
+* Make title field vs description field
 
 ### Extras
 * Adjustable time ranges for reservations

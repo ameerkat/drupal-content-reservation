@@ -810,7 +810,7 @@ function content_reservation_reservation_create_form_submit($form, &$form_state)
 			$description = $form_state['values']['description'];
 			$nid = $form_state['values']['node_id'];
 			$uid = $user->uid;
-			db_query("INSERT INTO {content_reservation} (nid, uid, description, start, end, status, created, modified) VALUES (%d, %d, '%s', '%s', '%s', %d NOW(), NOW())", $nid, $uid, $description, $start, $end, ContentReservation::$CODE_CREATED);
+			db_query("INSERT INTO {content_reservation} (nid, uid, description, start, end, status, created, modified) VALUES (%d, %d, '%s', '%s', '%s', %d, NOW(), NOW())", $nid, $uid, $description, $start, $end, ContentReservation::$CODE_CREATED);
 			drupal_set_message('Your reservation has been added.');
 		} else {
 			drupal_set_message($check[1], 'error');
