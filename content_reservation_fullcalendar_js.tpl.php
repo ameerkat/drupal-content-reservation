@@ -1,8 +1,8 @@
 $(document).ready(function() {
-	$("#content_reservation-fullCalendar").bind("resizecreate", function(event, ui) {
+	$("#content_reservation-fullCalendar-td").bind("resizecreate", function(event, ui) {
 		$('#content_reservation-fullCalendar').fullCalendar("render");
 	});
-	$("#content_reservation-fullCalendar").bind("resize", function(event, ui) {
+	$("#content_reservation-fullCalendar-td").bind("resize", function(event, ui) {
 		$('#content_reservation-fullCalendar').fullCalendar("render");
 	});
 	
@@ -15,7 +15,7 @@ $(document).ready(function() {
 		events: <?php echo($event_list); ?>
 	});
 	
-	$("#content_reservation-fullCalendar").resizable({
+	$("#content_reservation-fullCalendar-td").resizable({
 		handles: 'e',
 		/*create:
 			function(event, ui){
