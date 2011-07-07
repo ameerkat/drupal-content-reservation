@@ -35,6 +35,7 @@ class ContentReservation {
 	public static $default_textColor = "#ffffff";
 	public static $default_dateFormat = "m/d/Y - H:i";
 	public static $default_dateIncrement = 1;
+	public static $CODE_CREATED = 0;
 	public static $CODE_APPROVED = 1;
 	public static $CODE_REJECTED = 2;
 }
@@ -506,7 +507,7 @@ function content_reservation_moderate($mode = "type", $key = NULL, $action = NUL
 		if($content_type){
 			$content_list = array();
 			// 1 is the status code for published
-			$result = db_query("SELECT * FROM {content_reservation} WHERE 'status' <> 1",  $content_type);
+			$result = db_query("SELECT * FROM {content_reservation} WHERE status <> %d",  ContentReservation::$CODE_APPROVED);
 			while ($row = db_fetch_object($result)) {
 				$row->reservation_url = $base_url."/reservations/r/id/".$row->nid;
 				$row->approve_url = $base_url."/reservations/m/id/".$row->nid."/approve";
@@ -528,7 +529,7 @@ function content_reservation_moderate($mode = "type", $key = NULL, $action = NUL
 				drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
 				return theme("content_reservation_moderate", $content_list);
 			} else {
-				drupal_set_message("No content found for this content type",
+				drupal_set_message("No unapproved content for this content type found",
 					"warning");
 				return "";
 			}

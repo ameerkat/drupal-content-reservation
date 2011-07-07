@@ -31,6 +31,7 @@
 #content_reservation-fullCalendar {
 	padding-top: 10px;
 	padding-right: 20px;
+	width: 700px;
 }
 
 #content_reservation-fullCalendar .fc-header td{
@@ -40,4 +41,10 @@
 
 #content_reservation-fullCalendar .fc-header tbody{
 	border-top: 0px none;
+}
+
+#content_reservation_list-wrapper {
+	padding-left: -20px;
+	text-align: left;
+	min-width: 200px;
 }
