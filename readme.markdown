@@ -31,11 +31,15 @@ execute update_fc_jquery_fname(); somehow.
 ## Todo list
 
 ### High Priority
-* Optional event moderation queue
-* Adjustable time ranges for reservations
-* Generalize the set var functions
+* Event moderation queue
 
 ### Low Priority
+* Make approve / reject moderation ajax callback function
+* Resizable calendar
+
+### Extras
+* Adjustable time ranges for reservations
+* Generalize the set var functions
 * Make admin page with list of content for whitelist enable
 * Human readable time on the conflict resolution message
 * Hook into views and panels, and possible provide block for calendar
@@ -43,7 +47,4 @@ execute update_fc_jquery_fname(); somehow.
 * Throw a serialized json error on invalid query (returns empty array now)
 * Consider change url scheme to work off of get params instead of url slugs for json queries
 * Consider making a separate database table for content calendar colors as these may get large
-* Append content_reservation_ to the beginning of all functions
-* Add a main page that lists all content type and map it to a url
 * Make exclusion an array of ids vs singular id in the conflict lookup
-
