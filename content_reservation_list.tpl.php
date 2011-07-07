@@ -1,6 +1,6 @@
 <?php if($content_list): ?>
 <div id="content_reservation_list-wrapper" class="content_reservation">
-<table><tr><td>
+<table><tr><td id="content_reservation-fullCalendar-td">
 <div id="content_reservation-fullCalendar"></div>
 </div>
 </td><td style="width: 200px;" id="content_reservation_list_td">
