@@ -301,7 +301,7 @@ function content_reservation_set_textColor_var($nid, $color){
  * Implementation of hook_perm()
  */
 function content_reservation_perm(){
-	return array('view reservations', 'create reservations', 
+	return array('view reservations', 'create reservations', 'moderate reservations',
 		'modify reservations', 'administer reservations');
 }
 
@@ -813,6 +813,13 @@ function content_reservation_menu() {
 		'description' => 'Lists reservable content',
 		'page callback' => 'content_reservation_reserve',
 		'access arguments' => array('view reservations'),
+		'type' => MENU_CALLBACK,
+	);
+	$items['reservations/mod'] = array(
+		'title' => 'Reservations Moderation Queue',
+		'description' => 'Provides a list of content awaiting approval by a moderator',
+		'page callback'=> 'content_reservation_moderate',
+		'access arguments' => array('moderate reservations'),
 		'type' => MENU_CALLBACK,
 	);
 	$items['reservations/j'] = array(
