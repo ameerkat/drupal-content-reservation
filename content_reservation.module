@@ -543,7 +543,7 @@ function content_reservation_moderate($mode = "type", $key = NULL, $action = NUL
 				if($content_name){
 					drupal_set_title("Unapproved ".$content_name." Reservations");
 				}
-				$event_list_json = content_reservation_json("type", $content_type);
+				$event_list_json = content_reservation_json("type", $content_type, false);
 				drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
 				return theme("content_reservation_moderate", $content_list);
 			} else {
