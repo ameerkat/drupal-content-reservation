@@ -32,6 +32,10 @@ function content_reservation_schema() {
 				'description'	=> t('End DateTime of reservation'),
 				'type'			=> 'datetime',
 				'not null'		=> FALSE),
+		'status' => array(
+				'description'	=> t('Event status, used for moderation'),
+				'type'			=> 'int',
+				'not null'		=> FALSE),
 		'created' => array(
 				'description'	=> t('DateTime the reservation was created.'),
 				'type'			=> 'datetime',
@@ -49,6 +53,12 @@ function content_reservation_schema() {
 
 function content_reservation_install() {
 	drupal_install_schema('content_reservation');
+}
+
+function content_reservation_update_6032() {
+	$ret = array();
+	db_add_field($ret, 'content_reservation', 'status', array('type' => 'int', 'not null' => FALSE));
+	return $ret;
 }
 
 function content_reservation_uninstall() {
