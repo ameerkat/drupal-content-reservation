@@ -14,6 +14,7 @@
 * Start DateTime (start)
 * End DateTime (end)
 * Purpose (description)
+* Moderation Status (status)
 * Created (created)
 * Modified (modified)
 
@@ -30,7 +31,7 @@ execute update_fc_jquery_fname(); somehow.
 
 ## Todo list
 
-### Low Priority
+### High Priority
 * Menu items
 * Make approve / reject moderation ajax callback function
 * Resizable calendar
@@ -38,8 +39,9 @@ execute update_fc_jquery_fname(); somehow.
 * Styles
 * Email message to user
 * Make title field vs description field
+* Don't show old events
 
-### Extras
+### Low Priority
 * Adjustable time ranges for reservations
 * Generalize the set var functions
 * Make admin page with list of content for whitelist enable
