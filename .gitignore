@@ -1,1 +1,6 @@
+# Redistributables
 /lib/fullcalendar
+
+# Vim Temporary Files
+*~
+*.swp
