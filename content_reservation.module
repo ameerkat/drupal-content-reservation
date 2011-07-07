@@ -491,26 +491,45 @@ function content_reservation_reserve($mode = "type", $key = NULL){
 }
 
 function content_reservation_moderate($mode = "type", $key = NULL, $action = NULL){
-	$content_list = array();
-	// 1 is the status code for published
-	$result = db_query("SELECT * FROM {content_reservation} WHERE 'status' <> 1",  $content_type);
-	while ($row = db_fetch_object($result)) {
-		$row->reservation_url = $base_url."/reservations/r/id/".$row->nid;
-		$row->approve_url = $base_url."/reservations/m/id/".$row->nid."/approve";
-		$row->reject_url = $base_url."/reservations/m/id/".$row->nid."/reject";
-		$content_list[] = $row;
-	}
-	if(!empty($content_list)){
-		$content_name = get_readable_content_type($content_type);
-		if($content_name){
-			drupal_set_title("Unapproved ".$content_name." Reservations");
-		}
-		$event_list_json = content_reservation_json("type", $content_type);
-		drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
-		return theme("content_reservation_moderate", $content_list);
+	global $user, $base_url;
+	$module_path = drupal_get_path('module', 'content_reservation');
+	drupal_add_css($module_path.'/content-reservation.css');
+	drupal_add_js($module_path.'/lib/fullcalendar/jquery/'.variable_get("fc_jquery_filename", update_fc_jquery_fname()));
+	drupal_add_css($module_path.'/lib/fullcalendar/fullcalendar/fullcalendar.css');
+	drupal_add_js($module_path.'/lib/fullcalendar/fullcalendar/fullcalendar.js');
+	if($mode == "type" ){
+		$content_type = $key;
 	} else {
-		drupal_set_message("No content found for this content type",
-			"warning");
+		drupal_set_message("Invalid query mode $mode, must be one of type, id, edit", 'error');
+		return "";
+	}
+	if($content_type){
+		$content_list = array();
+		// 1 is the status code for published
+		$result = db_query("SELECT * FROM {content_reservation} WHERE 'status' <> 1",  $content_type);
+		while ($row = db_fetch_object($result)) {
+			$row->reservation_url = $base_url."/reservations/r/id/".$row->nid;
+			$row->approve_url = $base_url."/reservations/m/id/".$row->nid."/approve";
+			$row->reject_url = $base_url."/reservations/m/id/".$row->nid."/reject";
+			$row->approve_image = $base_url.'/'.$module_path.'/images/accept.png';
+			$row->reject_image = $base_url.'/'.$module_path.'/images/reject.png';
+			$content_list[] = $row;
+		}
+		if(!empty($content_list)){
+			$content_name = get_readable_content_type($content_type);
+			if($content_name){
+				drupal_set_title("Unapproved ".$content_name." Reservations");
+			}
+			$event_list_json = content_reservation_json("type", $content_type);
+			drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
+			return theme("content_reservation_moderate", $content_list);
+		} else {
+			drupal_set_message("No content found for this content type",
+				"warning");
+			return "";
+		}
+	} else {
+		drupal_set_message("No content type specified", "warning");
 		return "";
 	}
 }
