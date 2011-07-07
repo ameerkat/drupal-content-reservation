@@ -5,5 +5,5 @@ dependencies[] = date_popup
 dependencies[] = date_api
 dependencies[] = jquery_ui
 core = 6.x
-version = 6.x-0.39
+version = 6.x-0.40
 package = "ASU"

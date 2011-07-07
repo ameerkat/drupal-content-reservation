@@ -30,12 +30,11 @@ execute update_fc_jquery_fname(); somehow.
 
 ## Todo list
 
-### High Priority
-* Event moderation queue
-
 ### Low Priority
 * Make approve / reject moderation ajax callback function
 * Resizable calendar
+* Pagination
+* Styles
 
 ### Extras
 * Adjustable time ranges for reservations

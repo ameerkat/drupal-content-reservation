@@ -235,19 +235,37 @@ function content_reservation_make_json($result){
  *	a integer id nid or uid.
  * @return string
  */
-function content_reservation_json($query_type, $query_key){
-	if ($query_type == 'type'){
-		$result = db_query("SELECT * FROM {content_reservation}, {node} WHERE {node}.nid = {content_reservation}.nid AND {node}.type = '%s'",  $query_key);
-		return content_reservation_make_json($result);
-	} else if ($query_type == 'nid'){
-		$result = db_query("SELECT * FROM {content_reservation} WHERE nid = %d",  $query_key);
-		return content_reservation_make_json($result);
-	} else if ($query_type == 'uid'){
-		$result = db_query("SELECT * FROM {content_reservation} WHERE uid = %d",  $query_key);
-		return content_reservation_make_json($result);
+function content_reservation_json($query_type, $query_key, $approved = true){
+	if($approved){
+		if ($query_type == 'type'){
+			$result = db_query("SELECT * FROM {content_reservation}, {node} WHERE {node}.nid = {content_reservation}.nid AND {node}.type = '%s' AND {content_reservation}.status = %d",
+			  $query_key, ContentReservation::$CODE_APPROVED);
+			return content_reservation_make_json($result);
+		} else if ($query_type == 'nid'){
+			$result = db_query("SELECT * FROM {content_reservation} WHERE nid = %d AND {content_reservation}.status = %d",  $query_key, ContentReservation::$CODE_APPROVED);
+			return content_reservation_make_json($result);
+		} else if ($query_type == 'uid'){
+			$result = db_query("SELECT * FROM {content_reservation} WHERE uid = %d AND {content_reservation}.status = %d",  $query_key, ContentReservation::$CODE_APPROVED);
+			return content_reservation_make_json($result);
+		} else {
+			// If invalid query then return empty array
+			return "[]";
+		}
 	} else {
-		// If invalid query then return empty array
-		return "[]";
+		if ($query_type == 'type'){
+			$result = db_query("SELECT * FROM {content_reservation}, {node} WHERE {node}.nid = {content_reservation}.nid AND {node}.type = '%s' AND {content_reservation}.status = %d",
+			  $query_key, ContentReservation::$CODE_CREATED);
+			return content_reservation_make_json($result);
+		} else if ($query_type == 'nid'){
+			$result = db_query("SELECT * FROM {content_reservation} WHERE nid = %d AND {content_reservation}.status = %d",  $query_key, ContentReservation::$CODE_CREATED);
+			return content_reservation_make_json($result);
+		} else if ($query_type == 'uid'){
+			$result = db_query("SELECT * FROM {content_reservation} WHERE uid = %d AND {content_reservation}.status = %d",  $query_key, ContentReservation::$CODE_CREATED);
+			return content_reservation_make_json($result);
+		} else {
+			// If invalid query then return empty array
+			return "[]";
+		}
 	}
 }
 
@@ -507,7 +525,7 @@ function content_reservation_moderate($mode = "type", $key = NULL, $action = NUL
 		if($content_type){
 			$content_list = array();
 			// 1 is the status code for published
-			$result = db_query("SELECT * FROM {content_reservation} WHERE status <> %d",  ContentReservation::$CODE_APPROVED);
+			$result = db_query("SELECT * FROM {content_reservation} WHERE status = %d",  ContentReservation::$CODE_CREATED);
 			while ($row = db_fetch_object($result)) {
 				$row->reservation_url = $base_url."/reservations/r/id/".$row->nid;
 				$row->approve_url = $base_url."/reservations/m/id/".$row->nid."/approve";
@@ -732,9 +750,10 @@ function check_for_conflicts($nid, $start, $end, $exclusion_id = NULL){
 		return array(0, "Event can not end before it starts or be 0 length, please check times.");
 	}
 	if(!$exclusion_id){
-		$result = db_query("SELECT rid, start, end, description FROM {content_reservation} WHERE nid = %d",  $nid);
+		// We block code rejected calls so rejected events don't block event submissions
+		$result = db_query("SELECT rid, start, end, description FROM {content_reservation} WHERE nid = %d AND status <> %d",  $nid, ContentReservation::$CODE_REJECTED);
 	} else {
-		$result = db_query("SELECT rid, start, end, description FROM {content_reservation} WHERE nid = %d AND rid <> %d",  $nid, $exclusion_id);
+		$result = db_query("SELECT rid, start, end, description FROM {content_reservation} WHERE nid = %d AND rid <> %d AND status <> %d",  $nid, $exclusion_id, ContentReservation::$CODE_REJECTED);
 	}
 	while ($row = db_fetch_object($result)) {
 		if (($start > $row->start && $start < $row->end) || 
@@ -791,7 +810,7 @@ function content_reservation_reservation_create_form_submit($form, &$form_state)
 			$description = $form_state['values']['description'];
 			$nid = $form_state['values']['node_id'];
 			$uid = $user->uid;
-			db_query("INSERT INTO {content_reservation} (nid, uid, description, start, end, created, modified) VALUES (%d, %d, '%s', '%s', '%s', NOW(), NOW())", $nid, $uid, $description, $start, $end);
+			db_query("INSERT INTO {content_reservation} (nid, uid, description, start, end, status, created, modified) VALUES (%d, %d, '%s', '%s', '%s', %d NOW(), NOW())", $nid, $uid, $description, $start, $end, ContentReservation::$CODE_CREATED);
 			drupal_set_message('Your reservation has been added.');
 		} else {
 			drupal_set_message($check[1], 'error');
@@ -815,7 +834,7 @@ function content_reservation_reservation_edit_form_submit($form, &$form_state){
 			$description = $form_state['values']['description'];
 			$uid = $user->uid;
 			$rid = $form_state['values']['reservation_id'];
-			db_query("UPDATE {content_reservation} SET description='%s', start='%s', end='%s', modified=NOW() WHERE rid = %d", $description, $start, $end, $rid);
+			db_query("UPDATE {content_reservation} SET description='%s', start='%s', end='%s', modified=NOW(), status=%d WHERE rid = %d", $description, $start, $end, ContentReservation::$CODE_CREATED, $rid);
 			drupal_set_message('Event has been updated.');
 		} else {
 			drupal_set_message($check[1], 'error');
