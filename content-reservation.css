@@ -3,6 +3,10 @@
 	font-size: 12pt;
 }
 
+#content_reservation_list li.moderate {
+	font-size: 10pt;
+}
+
 .colorBlock {
 	width: 12px;
 	height: 12px;
