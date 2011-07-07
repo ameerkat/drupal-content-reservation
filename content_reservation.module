@@ -35,6 +35,8 @@ class ContentReservation {
 	public static $default_textColor = "#ffffff";
 	public static $default_dateFormat = "m/d/Y - H:i";
 	public static $default_dateIncrement = 1;
+	public static $CODE_APPROVED = 1;
+	public static $CODE_REJECTED = 2;
 }
 
 /**
@@ -501,37 +503,59 @@ function content_reservation_moderate($mode = "type", $key = NULL, $action = NUL
 	jquery_ui_add('ui.resizable');
 	if($mode == "type" ){
 		$content_type = $key;
-	} else {
-		drupal_set_message("Invalid query mode $mode, must be one of type, id, edit", 'error');
-		return "";
-	}
-	if($content_type){
-		$content_list = array();
-		// 1 is the status code for published
-		$result = db_query("SELECT * FROM {content_reservation} WHERE 'status' <> 1",  $content_type);
-		while ($row = db_fetch_object($result)) {
-			$row->reservation_url = $base_url."/reservations/r/id/".$row->nid;
-			$row->approve_url = $base_url."/reservations/m/id/".$row->nid."/approve";
-			$row->reject_url = $base_url."/reservations/m/id/".$row->nid."/reject";
-			$row->approve_image = $base_url.'/'.$module_path.'/images/accept.png';
-			$row->reject_image = $base_url.'/'.$module_path.'/images/reject.png';
-			$content_list[] = $row;
-		}
-		if(!empty($content_list)){
-			$content_name = get_readable_content_type($content_type);
-			if($content_name){
-				drupal_set_title("Unapproved ".$content_name." Reservations");
+		if($content_type){
+			$content_list = array();
+			// 1 is the status code for published
+			$result = db_query("SELECT * FROM {content_reservation} WHERE 'status' <> 1",  $content_type);
+			while ($row = db_fetch_object($result)) {
+				$row->reservation_url = $base_url."/reservations/r/id/".$row->nid;
+				$row->approve_url = $base_url."/reservations/m/id/".$row->nid."/approve";
+				$row->reject_url = $base_url."/reservations/m/id/".$row->nid."/reject";
+				$usable_time = convert_iso8601_time($row->start);
+				$row->show_js = "javascript:$('#content_reservation-fullCalendar').fullCalendar('gotoDate', $.fullCalendar.parseDate('$usable_time'));";
+				$row->show_image = $base_url.'/'.$module_path.'/images/calendar.png';
+				$row->approve_image = $base_url.'/'.$module_path.'/images/accept.png';
+				$row->reject_image = $base_url.'/'.$module_path.'/images/reject.png';
+
+				$content_list[] = $row;
 			}
-			$event_list_json = content_reservation_json("type", $content_type);
-			drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
-			return theme("content_reservation_moderate", $content_list);
+			if(!empty($content_list)){
+				$content_name = get_readable_content_type($content_type);
+				if($content_name){
+					drupal_set_title("Unapproved ".$content_name." Reservations");
+				}
+				$event_list_json = content_reservation_json("type", $content_type);
+				drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
+				return theme("content_reservation_moderate", $content_list);
+			} else {
+				drupal_set_message("No content found for this content type",
+					"warning");
+				return "";
+			}
 		} else {
-			drupal_set_message("No content found for this content type",
-				"warning");
+			drupal_set_message("No content type specified", "warning");
 			return "";
 		}
+	} else if ($mode == "id") {
+		$content_id = $key;
+		if($content_id){
+			if($action == "approve") {
+				db_query("UPDATE {content_reservation} SET status=%d WHERE rid = %d", 
+					ContentReservation::$CODE_APPROVED, $content_id);
+				drupal_set_message('Event has been approved. {status: '.ContentReservation::$CODE_APPROVED.'}');
+				return "";
+			} else if ($action == "reject") {
+				db_query("UPDATE {content_reservation} SET status=%d WHERE rid = %d", 
+					ContentReservation::$CODE_REJECTED, $content_id);
+				drupal_set_message('Event has been rejected. {status: '.ContentReservation::$CODE_REJECTED.'}');
+				return "";
+			} else {
+				drupal_set_message("Invalid event action, must be one of {approve, reject}", 'error');
+				return "";
+			}
+		}
 	} else {
-		drupal_set_message("No content type specified", "warning");
+		drupal_set_message("Invalid query mode $mode, must be one of type, id", 'error');
 		return "";
 	}
 }
