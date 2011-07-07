@@ -17,6 +17,10 @@
 	vertical-align: top;
 }
 
+#content_reservation-fullCalendar-td {
+	vertical-align: top;
+}
+
 .colorBlock {
 	width: 12px;
 	height: 12px;

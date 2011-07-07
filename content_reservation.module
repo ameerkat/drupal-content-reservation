@@ -527,13 +527,19 @@ function content_reservation_moderate($mode = "type", $key = NULL, $action = NUL
 			// 1 is the status code for published
 			$result = db_query("SELECT * FROM {content_reservation}, {users} WHERE {users}.uid = {content_reservation}.uid AND {content_reservation}.status = %d",  ContentReservation::$CODE_CREATED);
 			while ($row = db_fetch_object($result)) {
-				$row->reservation_url = $base_url."/reservations/r/id/".$row->nid;
+				// @todo All this stuff should be moved to the theme preprocessor callback
+				$row->content_name = get_readable_content_title($row->nid);
+				$row->content_url = $base_url."/reservations/r/id/".$row->nid;
+				$row->content_url_color = content_reservation_get_color_var($row->nid);
+				$row->content_url_textColor = content_reservation_get_textColor_var($row->nid);
+				$row->reservation_url = $base_url."/reservations/r/edit/".$row->rid;
 				$row->approve_url = $base_url."/reservations/m/id/".$row->nid."/approve";
 				$row->reject_url = $base_url."/reservations/m/id/".$row->nid."/reject";
 				$row->user_url = $base_url."/user/".$row->uid;
 				$usable_time = convert_iso8601_time($row->start);
 				$row->show_js = "javascript:$('#content_reservation-fullCalendar').fullCalendar('gotoDate', $.fullCalendar.parseDate('$usable_time'));";
 				$row->show_image = $base_url.'/'.$module_path.'/images/calendar.png';
+				$row->edit_image = $base_url.'/'.$module_path.'/images/calendar_edit.png';
 				$row->approve_image = $base_url.'/'.$module_path.'/images/accept.png';
 				$row->reject_image = $base_url.'/'.$module_path.'/images/reject.png';
 				$row->user_image = $base_url.'/'.$module_path.'/images/user.png';
