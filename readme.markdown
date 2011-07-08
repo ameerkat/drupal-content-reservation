@@ -34,8 +34,7 @@ execute update_fc_jquery_fname(); somehow.
 ### High Priority
 * Menu items
 * Make approve / reject moderation ajax callback function
-* Resizable calendar
-* Pagination
+* Pagination or scrolling
 * Styles
 * Email message to user
 * Make title field vs description field
