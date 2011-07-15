@@ -115,6 +115,94 @@ function content_reservation_init(){
 	}
 }
 
+function content_reservation_reserve_type($key = NULL){
+	// Start Common Block
+	global $user, $base_url;
+	$module_path = drupal_get_path('module', 'content_reservation');
+	drupal_add_css($module_path.'/content-reservation.css');
+	drupal_add_js($module_path.'/lib/fullcalendar/jquery/'.variable_get("fc_jquery_filename", update_fc_jquery_fname()));
+	drupal_add_css($module_path.'/lib/fullcalendar/fullcalendar/fullcalendar.css');
+	drupal_add_js($module_path.'/lib/fullcalendar/fullcalendar/fullcalendar.js');
+	jquery_ui_add('ui.resizable');
+	// End Common Block
+	$content_type = $key;
+	if($content_type){
+		// There is no content id passed in so we just display the default
+		// content reservation list
+		$content_list = array();
+		$result = db_query("SELECT * FROM {node} WHERE type = '%s'",  $content_type);
+		while ($row = db_fetch_object($result)) {
+			$row->reservation_url = $base_url."/reservations/r/id/".$row->nid;
+			$content_list[] = $row;
+		}
+		if(!empty($content_list)){
+			$content_name = get_readable_content_type($content_type);
+			if($content_name){
+				drupal_set_title("Available ".$content_name." Reservations");
+			}
+			$event_list_json = content_reservation_json("type", $content_type);
+			drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
+			return theme("content_reservation_list", $content_list);
+		} else {
+			drupal_set_message("No content found for this content type", "warning");
+			return "";
+		}
+	} else {
+		// No content type specified
+		drupal_set_message("No content type specified", "warning");
+		return "";
+	}
+}
+
+function content_reservation_reserve_idedit($mode = NULL, $key = NULL){
+	// Start Common Block
+	global $user, $base_url;
+	$module_path = drupal_get_path('module', 'content_reservation');
+	drupal_add_css($module_path.'/content-reservation.css');
+	drupal_add_js($module_path.'/lib/fullcalendar/jquery/'.variable_get("fc_jquery_filename", update_fc_jquery_fname()));
+	drupal_add_css($module_path.'/lib/fullcalendar/fullcalendar/fullcalendar.css');
+	drupal_add_js($module_path.'/lib/fullcalendar/fullcalendar/fullcalendar.js');
+	jquery_ui_add('ui.resizable');
+	// End Common Block
+
+	if($mode == "id"){
+		$content_id = $key;
+	} else {
+		$reservation_id = $key;
+		if(!check_reservation_edit_permissions($reservation_id)){
+			drupal_set_message("You do not have permission to edit this reservation", "error");
+			return "";
+		}
+		$content_id = get_nid_from_rid($reservation_id);
+	}
+	$content_type = get_type_from_nid($content_id);
+	$content_title = get_readable_content_title($content_id);
+	if(!$content_title){
+		drupal_set_message(
+			"Content with nid #$content_id could not be found.", 'warning');
+		return render_content_link($content_type);
+	}
+	drupal_set_title($content_title);
+	drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
+	$event_list_json = content_reservation_json("nid", $content_id);
+	drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
+	$to_return = array();
+	$to_return['content_link'] = content_reservation_get_content_link($content_type);
+	$to_return['content_title'] = get_readable_content_type($content_type);
+	if($reservation_id){
+		$to_return['reservation_form'] = drupal_get_form('content_reservation_reservation_edit_form', $content_id, $reservation_id);
+	} else {
+		$to_return['reservation_form'] = drupal_get_form('content_reservation_reservation_create_form', $content_id);
+	}
+	$to_return['calendar_div'] = generate_calendar_div();
+	// Let them set settings for this content if they have 'administer reservations' privelages
+	if(user_access('administer reservations', $user)){
+		$to_return['admin_form'] = drupal_get_form('content_reservation_content_admin_form', $content_id);
+	}
+	return theme("content_reservation_reserve", $to_return);
+	//return print_r($to_return, true);
+}
+
 /**
  * Reservable content list page callback
  * @param string $mode either type, id, or edit; if type then returns a list of
@@ -126,87 +214,13 @@ function content_reservation_init(){
  * @return string
  */
 function content_reservation_reserve($mode = "type", $key = NULL){
-	global $user, $base_url;
-	$module_path = drupal_get_path('module', 'content_reservation');
-	drupal_add_css($module_path.'/content-reservation.css');
-	drupal_add_js($module_path.'/lib/fullcalendar/jquery/'.variable_get("fc_jquery_filename", update_fc_jquery_fname()));
-	drupal_add_css($module_path.'/lib/fullcalendar/fullcalendar/fullcalendar.css');
-	drupal_add_js($module_path.'/lib/fullcalendar/fullcalendar/fullcalendar.js');
-	jquery_ui_add('ui.resizable');
 	if($mode == "type" ){
-		$content_type = $key;
-		if($content_type){
-			// There is no content id passed in so we just display the default
-			// content reservation list
-			$content_list = array();
-			$result = db_query("SELECT * FROM {node} WHERE type = '%s'",  $content_type);
-			while ($row = db_fetch_object($result)) {
-				$row->reservation_url = $base_url."/reservations/r/id/".$row->nid;
-				$content_list[] = $row;
-			}
-			if(!empty($content_list)){
-				$content_name = get_readable_content_type($content_type);
-				if($content_name){
-					drupal_set_title("Available ".$content_name." Reservations");
-				}
-				$event_list_json = content_reservation_json("type", $content_type);
-				drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
-				return theme("content_reservation_list", $content_list);
-			} else {
-				drupal_set_message("No content found for this content type",
-					"warning");
-				return "";
-			}
-		} else {
-			// No content type specified
-			drupal_set_message("No content type specified",
-				"warning");
-			return "";
-		}
+		return content_reservation_reserve_type($key);
 	} else if ($mode == "id" || $mode == "edit"){
-		if($mode == "id"){
-			$content_id = $key;
-		} else {
-			$reservation_id = $key;
-			if(!check_reservation_edit_permissions($reservation_id)){
-				drupal_set_message(
-					"You do not have permission to edit this reservation",
-					"error");
-				return "";
-			}
-			$content_id = get_nid_from_rid($reservation_id);
-		}
-		$content_type = get_type_from_nid($content_id);
-		$content_title = get_readable_content_title($content_id);
-		if(!$content_title){
-			drupal_set_message(
-				"Content with nid #$content_id could not be found.", 'warning');
-			return render_content_link($content_type);
-		}
-		drupal_set_title($content_title);
-		drupal_add_css(drupal_get_path('module', 'content_reservation') .'/content-reservation.css');
-		$event_list_json = content_reservation_json("nid", $content_id);
-		drupal_add_js(theme("content_reservation_fullcalendar_js", $event_list_json), 'inline');
-		$to_return = array();
-		$to_return['content_link'] = content_reservation_get_content_link($content_type);
-		$to_return['content_title'] = get_readable_content_type($content_type);
-		if($reservation_id){
-			$to_return['reservation_form'] = drupal_get_form('content_reservation_reservation_edit_form', $content_id, $reservation_id);
-		} else {
-			$to_return['reservation_form'] = drupal_get_form('content_reservation_reservation_create_form', $content_id);
-		}
-		$to_return['calendar_div'] = generate_calendar_div();
-		// Let them set settings for this content if they have 'administer reservations' privelages
-		if(user_access('administer reservations', $user)){
-			$to_return['admin_form'] = drupal_get_form('content_reservation_content_admin_form', $content_id);
-		}
-		return theme("content_reservation_reserve", $to_return);
-		//return print_r($to_return, true);
+		return content_reservation_reserve_idedit($mode, $key);
 	} else {
-		drupal_set_message(
-			"Invalid query mode $mode, must be one of type, id, edit", 'error');
+		drupal_set_message("Invalid query mode $mode, must be one of type, id, edit", 'error');
 		return "";
-		
 	}
 }
 
