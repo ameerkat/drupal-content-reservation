@@ -36,8 +36,8 @@ function content_reservation_moderate($mode = "type", $key = NULL, $action = NUL
 				$row->content_url_color = content_reservation_get_color_var($row->nid);
 				$row->content_url_textColor = content_reservation_get_textColor_var($row->nid);
 				$row->reservation_url = $base_url."/reservations/r/edit/".$row->rid;
-				$row->approve_url = $base_url."/reservations/m/id/".$row->nid."/approve";
-				$row->reject_url = $base_url."/reservations/m/id/".$row->nid."/reject";
+				$row->approve_url = $base_url."/reservations/m/id/".$row->rid."/approve";
+				$row->reject_url = $base_url."/reservations/m/id/".$row->rid."/reject";
 				$row->user_url = $base_url."/user/".$row->uid;
 				$usable_time = convert_iso8601_time($row->start);
 				$row->show_js = "javascript:$('#content_reservation-fullCalendar').fullCalendar('gotoDate', $.fullCalendar.parseDate('$usable_time'));";
@@ -69,14 +69,14 @@ function content_reservation_moderate($mode = "type", $key = NULL, $action = NUL
 		$content_id = $key;
 		if($content_id){
 			if($action == "approve") {
-				db_query("UPDATE {content_reservation} SET status=%d WHERE rid = %d", 
+				db_query("UPDATE {content_reservation} SET status=%d WHERE rid=%d", 
 					ContentReservation::$CODE_APPROVED, $content_id);
-				drupal_set_message('Event has been approved. {status: '.ContentReservation::$CODE_APPROVED.'}');
+				drupal_set_message("Event $content_id has been approved. {status: ".ContentReservation::$CODE_APPROVED."}");
 				return "";
 			} else if ($action == "reject") {
-				db_query("UPDATE {content_reservation} SET status=%d WHERE rid = %d", 
+				db_query("UPDATE {content_reservation} SET status=%d WHERE rid=%d", 
 					ContentReservation::$CODE_REJECTED, $content_id);
-				drupal_set_message('Event has been rejected. {status: '.ContentReservation::$CODE_REJECTED.'}');
+				drupal_set_message("Event $content_id has been rejected. {status: ".ContentReservation::$CODE_REJECTED."}");
 				return "";
 			} else {
 				drupal_set_message("Invalid event action, must be one of {approve, reject}", 'error');

@@ -32,13 +32,15 @@ execute update_fc_jquery_fname(); somehow.
 ## Todo list
 
 ### High Priority
-* Menu items
+* <strike>Menu items</strike>
+* Landing pages for the different available types
+* Don't Allow Reservations in the Past
 * Make approve / reject moderation ajax callback function
 * Pagination or scrolling
 * Styles
 * Email message to user
 * Make title field vs description field
-* Don't show old events
+* <strike>Don't show old events</strike>
 
 ### Low Priority
 * Adjustable time ranges for reservations
