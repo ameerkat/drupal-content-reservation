@@ -33,6 +33,7 @@ execute update_fc_jquery_fname(); somehow.
 
 ### High Priority
 * <strike>Menu items</strike>
+* Usage documentation
 * Landing pages for the different available types
 * <strike>Don't Allow Reservations in the Past</strike>
 * Pagination or scrolling style for events/moderation

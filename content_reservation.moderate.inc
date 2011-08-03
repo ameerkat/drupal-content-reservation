@@ -32,12 +32,18 @@ function content_reservation_mail($key, &$message, $params) {
 
 function content_reservation_sendmodmail($rid, $status){
 	$result = db_query("SELECT uid FROM {content_reservation} WHERE rid = %d",  $rid);
-	$row = db_fetch_object($result));
+	$row = db_fetch_object($result);
 	$params['account'] = user_load($row->uid);
 	/// @todo make this into a function
 	$params['event_url'] = $base_url."/reservations/r/edit/".$rid;
 	$params['event_status'] = $status;
-	drupal_mail('content_reservation', 'moderation_notification', $account->mail, user_preferred_language($account), $params);
+	$message = drupal_mail('content_reservation', 'moderation_notification', $account->mail, user_preferred_language($account), $params);
+	$system = drupal_mail_system("content_reservation", "moderation_notification");
+	if($system){
+		$system->mail($message);
+	} else {
+		drupal_set_message("failed to get a valid drupal_mail_system interface : could not send email notification.", "error");
+	}
 }
 
 function content_reservation_moderate($mode = "type", $key = NULL, $action = NULL){
@@ -99,7 +105,7 @@ function content_reservation_moderate($mode = "type", $key = NULL, $action = NUL
 				drupal_set_message("Event $content_id has been approved. {status: ".ContentReservation::$CODE_APPROVED."}");
 				if(variable_get('content_reservation_sendmodmail', 1)){
 					// Send email
-					function content_reservation_sendmodmail($content_id, "approved");
+					content_reservation_sendmodmail($content_id, "approved");
 				}
 				return "";
 			} else if ($action == "reject") {
@@ -108,7 +114,7 @@ function content_reservation_moderate($mode = "type", $key = NULL, $action = NUL
 				drupal_set_message("Event $content_id has been rejected. {status: ".ContentReservation::$CODE_REJECTED."}");
 				if(variable_get('content_reservation_sendmodmail', 1)){
 					// Send email
-					function content_reservation_sendmodmail($content_id, "rejected");
+					content_reservation_sendmodmail($content_id, "rejected");
 				}
 				return "";
 			} else {
