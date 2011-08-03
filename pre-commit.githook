@@ -1,4 +1,0 @@
-#!/bin/sh
-echo updating version numbering...
-python inc_vnum.py --file content_reservation.info
-

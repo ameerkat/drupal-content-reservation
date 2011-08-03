@@ -52,7 +52,12 @@ class ContentReservation {
 	public static $CODE_REJECTED = 2;
 }
 
+/*
+ * Includes
+ */
 include("content_reservation.util.inc");
+include("content_reservation.moderate.inc");
+include("content_reservation.administer.inc");
 
 /**
  * Implementation of hook_perm()
@@ -224,7 +229,6 @@ function content_reservation_reserve($mode = "type", $key = NULL){
 	}
 }
 
-include("content_reservation.moderate.inc");
 
 /**
  * Implementation of the reservation form
@@ -550,26 +554,36 @@ function content_reservation_content_admin_form_submit($form, &$form_state){
 function content_reservation_menu() {
 	$items = array();
 	$items['reservations/r'] = array(
-		'title' => 'Reservations',
-		'description' => 'Lists reservable content',
+		'title' => t('Reservations'),
+		'description' => t('Lists reservable content'),
 		'page callback' => 'content_reservation_reserve',
 		'access arguments' => array('view reservations'),
 		'type' => MENU_NORMAL_ITEM,
 	);
 	$items['reservations/m'] = array(
-		'title' => 'Reservations Moderation Queue',
-		'description' => 'Provides a list of content awaiting approval by a moderator',
+		'title' => t('Reservations Moderation Queue'),
+		'description' => t('Provides a list of content awaiting approval by a moderator'),
 		'page callback'=> 'content_reservation_moderate',
 		'access arguments' => array('moderate reservations'),
 		'type' => MENU_NORMAL_ITEM,
 	);
 	$items['reservations/j'] = array(
-		'title' => 'Reservations JSON',
-		'description' => 'Returns reservation information wrapped in json',
+		'title' => t('Reservations JSON'),
+		'description' => t('Returns reservation information wrapped in json'),
 		'page callback' => 'content_reservation_json_print',
 		'access arguments' => array('view reservations'),
 		'type' => MENU_CALLBACK,
 	);
+	// Admin Menu
+	$items['admin/settings/content_reservation'] = array(
+		'title' => t('Content Reservation Administration'),
+		'description' => t('Administration options for the content reservation module'),
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('content_reservation_admin'),
+		'access arguments' => array('administer reservations'),
+		'type' => MENU_NORMAL_ITEM,
+	);
+		
 	return $items;
 }
 

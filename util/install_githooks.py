@@ -4,7 +4,7 @@
 from os import listdir
 from shutil import copy2
 
-git_hook_dir = "./.git/hooks/"
+git_hook_dir = "../.git/hooks/"
 
 def fslash(f):
 	"""Replaces all backslashes with forward slashes"""
