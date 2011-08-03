@@ -34,16 +34,16 @@ execute update_fc_jquery_fname(); somehow.
 ### High Priority
 * <strike>Menu items</strike>
 * Landing pages for the different available types
-* Don't Allow Reservations in the Past
-* Make approve / reject moderation ajax callback function
-* Pagination or scrolling
+* <strike>Don't Allow Reservations in the Past</strike>
+* Pagination or scrolling style for events/moderation
 * Styles
-* Email message to user
+* Email message to user on approve/reject
 * Make title field vs description field
 * <strike>Don't show old events</strike>
 
 ### Low Priority
 * Use the sites/all/libraries folder for the calendar
+* Make approve / reject moderation ajax callback function
 * Adjustable time ranges for reservations
 * Generalize the set var functions
 * Make admin page with list of content for whitelist enable

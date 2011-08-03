@@ -27,6 +27,11 @@ function content_reservation_admin(){
 		'#title' => t('Allow Reservation on Past Dates'),
 		'#description' => t('Allow users to reserve on dates that have already passed'),
 		'#default_value' => variable_get('content_reservation_reservepast', 0));
+	$form['content_reservation_sendmodmail'] = array(
+		'#type' => 'checkbox',
+		'#title' => t('Send Email on Moderator Approve/Reject'),
+		'#description' => t('Sends an email to the user with notification of reservation status'),
+		'#default_value' => variable_get('content_reservation_sendmodmail', 1));
 	return system_settings_form($form);
 }
 

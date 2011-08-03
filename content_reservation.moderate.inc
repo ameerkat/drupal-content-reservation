@@ -15,6 +15,31 @@
  * limitations under the License.
  */
 
+function content_reservation_mail($key, &$message, $params) {
+	$data['user'] = $params['account'];
+	$options['language'] = $message['language'];
+	user_mail_tokens($variables, $data, $options);
+	switch($key) {
+		case 'moderation_notification':
+			$event_status = $params['event_status'];
+			$event_url = $params['event_url'];
+			$langcode = $message['language']->language;
+			$message['subject'] = t('Notification from !site : Moderation Notification', $variables, array('langcode' => $langcode));
+			$message['body'][] = t("!username,\n\nYour event [$event_id] has been $event_status.", $variables, array('langcode' => $langcode));
+		break;
+	}
+}
+
+function content_reservation_sendmodmail($rid, $status){
+	$result = db_query("SELECT uid FROM {content_reservation} WHERE rid = %d",  $rid);
+	$row = db_fetch_object($result));
+	$params['account'] = user_load($row->uid);
+	/// @todo make this into a function
+	$params['event_url'] = $base_url."/reservations/r/edit/".$rid;
+	$params['event_status'] = $status;
+	drupal_mail('content_reservation', 'moderation_notification', $account->mail, user_preferred_language($account), $params);
+}
+
 function content_reservation_moderate($mode = "type", $key = NULL, $action = NULL){
 	global $user, $base_url;
 	$module_path = drupal_get_path('module', 'content_reservation');
@@ -66,17 +91,25 @@ function content_reservation_moderate($mode = "type", $key = NULL, $action = NUL
 			return "";
 		}
 	} else if ($mode == "id") {
-		$content_id = $key;
+		$content_id = $key; // note this is really rid, not to be confused with the node content id
 		if($content_id){
 			if($action == "approve") {
 				db_query("UPDATE {content_reservation} SET status=%d WHERE rid=%d", 
 					ContentReservation::$CODE_APPROVED, $content_id);
 				drupal_set_message("Event $content_id has been approved. {status: ".ContentReservation::$CODE_APPROVED."}");
+				if(variable_get('content_reservation_sendmodmail', 1)){
+					// Send email
+					function content_reservation_sendmodmail($content_id, "approved");
+				}
 				return "";
 			} else if ($action == "reject") {
 				db_query("UPDATE {content_reservation} SET status=%d WHERE rid=%d", 
 					ContentReservation::$CODE_REJECTED, $content_id);
 				drupal_set_message("Event $content_id has been rejected. {status: ".ContentReservation::$CODE_REJECTED."}");
+				if(variable_get('content_reservation_sendmodmail', 1)){
+					// Send email
+					function content_reservation_sendmodmail($content_id, "rejected");
+				}
 				return "";
 			} else {
 				drupal_set_message("Invalid event action, must be one of {approve, reject}", 'error');
