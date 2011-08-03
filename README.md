@@ -7,17 +7,6 @@
 	* /reservations/r/edit/$reservation_id
 * /reservations/j/$query_type/$query_key - Returns an array of fullcalender event objects formatted as json, $query_type is one of either type, nid, uid and $query_key is the appropriate type or id to search for.
 
-## DB Fields
-* Reservation Id (rid)
-* Associated Node Id (nid)
-* Associated User Id (uid)
-* Start DateTime (start)
-* End DateTime (end)
-* Purpose (description)
-* Moderation Status (status)
-* Created (created)
-* Modified (modified)
-
 ## Installation Notes
 If you download the latest dev version there is no fullcalendar, you have
 to install it separately see the notes in /lib/README
@@ -32,21 +21,23 @@ execute update_fc_jquery_fname(); somehow.
 ## Todo list
 
 ### High Priority
-* <strike>Menu items</strike>
+* -Menu items
 * Usage documentation
 * Landing pages for the different available types
-* <strike>Don't Allow Reservations in the Past</strike>
+* -Don't Allow Reservations in the Past
 * Pagination or scrolling style for events/moderation
 * Styles
-* Email message to user on approve/reject
+* -Email message to user on approve/reject (needs to be tested)
 * Make title field vs description field
-* <strike>Don't show old events</strike>
+* add user to displayed info on calendar optional
+* -Don't show old events
 
 ### Low Priority
 * Use the sites/all/libraries folder for the calendar
 * Make approve / reject moderation ajax callback function
 * Adjustable time ranges for reservations
 * Generalize the set var functions
+* Generalize make url functions
 * Make admin page with list of content for whitelist enable
 * Human readable time on the conflict resolution message
 * Hook into views and panels, and possible provide block for calendar
@@ -55,3 +46,4 @@ execute update_fc_jquery_fname(); somehow.
 * Consider change url scheme to work off of get params instead of url slugs for json queries
 * Consider making a separate database table for content calendar colors as these may get large
 * Make exclusion an array of ids vs singular id in the conflict lookup
+

@@ -32,6 +32,11 @@ function content_reservation_admin(){
 		'#title' => t('Send Email on Moderator Approve/Reject'),
 		'#description' => t('Sends an email to the user with notification of reservation status'),
 		'#default_value' => variable_get('content_reservation_sendmodmail', 1));
+	$form['content_reservation_showuser'] = array(
+		'#type' => 'checkbox',
+		'#title' => t('Show Usernames on Calendar'),
+		'#description' => t('Append the user name to the calendar view information'),
+		'#default_value' => variable_get('content_reservation_showuser', 1));
 	return system_settings_form($form);
 }
 

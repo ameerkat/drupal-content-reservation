@@ -185,6 +185,13 @@ function content_reservation_make_json($result){
 		$event = new FullcalendarEvent();
 		$event->id = $row->rid;
 		$event->title = $row->description;
+		if(variable_get("content_reservation_showuser", 1)){
+			if($row->uid != 0){
+				$event->title .= " (".user_load($row->uid)->name.")";
+			} else {
+				$event->title .= " (anonymous)";
+			}
+		}
 		// Convert times to fullcalendar compatible unix timestamp
 		$event->start = convert_iso8601_time($row->start);
 		$event->end = convert_iso8601_time($row->end);
