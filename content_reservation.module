@@ -397,6 +397,11 @@ function content_reservation_json_print($query_type, $query_key){
  *	itself. defaults to null.
  */
 function check_for_conflicts($nid, $start, $end, $exclusion_id = NULL){
+	if(!variable_get('content_reservation_reservepast', 0)){
+		if(convert_unix_time($start) < time()){
+			return array(0, "Events can not be created in the past.");
+		}
+	}
 	if($end <= $start){
 		return array(0, "Event can not end before it starts or be 0 length, please check times.");
 	}
