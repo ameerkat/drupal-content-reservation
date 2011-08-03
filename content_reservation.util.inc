@@ -211,37 +211,27 @@ function content_reservation_make_json($result){
  * @return string
  */
 function content_reservation_json($query_type, $query_key, $approved = true){
-	if($approved){
-		if ($query_type == 'type'){
-			$result = db_query("SELECT * FROM {content_reservation}, {node} WHERE {node}.nid = {content_reservation}.nid AND {node}.type = '%s' AND {content_reservation}.status = %d",
-			  $query_key, ContentReservation::$CODE_APPROVED);
-			return content_reservation_make_json($result);
-		} else if ($query_type == 'nid'){
-			$result = db_query("SELECT * FROM {content_reservation} WHERE nid = %d AND {content_reservation}.status = %d",  $query_key, ContentReservation::$CODE_APPROVED);
-			return content_reservation_make_json($result);
-		} else if ($query_type == 'uid'){
-			$result = db_query("SELECT * FROM {content_reservation} WHERE uid = %d AND {content_reservation}.status = %d",  $query_key, ContentReservation::$CODE_APPROVED);
-			return content_reservation_make_json($result);
-		} else {
-			// If invalid query then return empty array
-			return "[]";
-		}
-	} else {
-		if ($query_type == 'type'){
-			$result = db_query("SELECT * FROM {content_reservation}, {node} WHERE {node}.nid = {content_reservation}.nid AND {node}.type = '%s' AND {content_reservation}.status = %d",
-			  $query_key, ContentReservation::$CODE_CREATED);
-			return content_reservation_make_json($result);
-		} else if ($query_type == 'nid'){
-			$result = db_query("SELECT * FROM {content_reservation} WHERE nid = %d AND {content_reservation}.status = %d",  $query_key, ContentReservation::$CODE_CREATED);
-			return content_reservation_make_json($result);
-		} else if ($query_type == 'uid'){
-			$result = db_query("SELECT * FROM {content_reservation} WHERE uid = %d AND {content_reservation}.status = %d",  $query_key, ContentReservation::$CODE_CREATED);
-			return content_reservation_make_json($result);
-		} else {
-			// If invalid query then return empty array
-			return "[]";
-		}
+	$showpast = variable_get('content_reservation_showpast', 0);
+	$showpast_querystr = "";
+	$db_querystr = "";
+	if(!$showpast){
+		// filter out past events by restricting shown events to future events
+		$showpast_querystr = " AND {content_reservation}.end > NOW()";
 	}
+	if ($query_type == 'type'){
+		$db_querystr = "SELECT * FROM {content_reservation}, {node} WHERE {node}.nid = {content_reservation}.nid".
+			" AND {node}.type = '%s' AND {content_reservation}.status = %d";
+	} else if ($query_type == 'nid'){
+		$db_querystr = "SELECT * FROM {content_reservation} WHERE nid = %d AND {content_reservation}.status = %d";
+	} else if ($query_type == 'uid'){
+		$db_querystr = "SELECT * FROM {content_reservation} WHERE uid = %d AND {content_reservation}.status = %d";
+	} else {
+		// If invalid query then return empty array
+		return "[]";
+	}
+	$result = db_query($db_querystr.$showpast_querystr, 
+		$query_key, $approved ? ContentReservation::$CODE_APPROVED : ContentReservation::$CODE_CREATED);
+	return content_reservation_make_json($result);
 }
 
 /**
