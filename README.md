@@ -43,6 +43,7 @@ execute update_fc_jquery_fname(); somehow.
 * <strike>Don't show old events</strike>
 
 ### Low Priority
+* Use the sites/all/libraries folder for the calendar
 * Adjustable time ranges for reservations
 * Generalize the set var functions
 * Make admin page with list of content for whitelist enable

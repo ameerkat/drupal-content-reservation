@@ -23,6 +23,12 @@ function content_reservation_admin(){
 		'#description' => t('Show events that have already past (when enabled will load ALL events ever created which make take a long time)'),
 		'#default_value' => variable_get('content_reservation_showpast', 0),
 	);
+	$form['content_reservation_reservepast'] = array(
+		'#type' => 'checkbox'
+		'#title' => t('Allow Reservation on Past Dates'),
+		'#description' => t('Allow users to reserve on dates that have already passed'),
+		'#default_value' => variable_get('content_reservation_reservepast', 0),
+	);
 	return system_settings_form($form);
 }
 
