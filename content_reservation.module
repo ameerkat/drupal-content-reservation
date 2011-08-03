@@ -55,9 +55,9 @@ class ContentReservation {
 /*
  * Includes
  */
-include("content_reservation.util.inc");
-include("content_reservation.moderate.inc");
-include("content_reservation.admin.inc");
+include("content_reservation.module.util.inc");
+include("content_reservation.module.moderate.inc");
+include("content_reservation.module.admin.inc");
 
 /**
  * Implementation of hook_perm()

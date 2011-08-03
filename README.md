@@ -29,7 +29,7 @@ execute update_fc_jquery_fname(); somehow.
 * Styles
 * -Email message to user on approve/reject (needs to be tested)
 * Make title field vs description field
-* add user to displayed info on calendar optional
+* -add user to displayed info on calendar (optional)
 * -Don't show old events
 
 ### Low Priority
