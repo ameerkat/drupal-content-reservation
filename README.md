@@ -20,7 +20,7 @@ the time granularity for each reservable content, as well as the color it shows 
 recommended you set each content type to a seperate color so as to easily differentiate them when displayed
 on a combined calendar.
 
-![node specific settings](https://github.com/ameerkat/drupal-content-reservation/tree/master/images/readme/node_specific_settings.jpg)
+![node specific settings](https://github.com/ameerkat/drupal-content-reservation/raw/master/images/readme/node_specific_settings.jpg)
 
 ## Todo list
 
