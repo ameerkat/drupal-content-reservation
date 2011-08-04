@@ -21,7 +21,7 @@ recommended you set each content type to a seperate color so as to easily differ
 on a combined calendar.
 
 ![node specific settings](https://github.com/ameerkat/drupal-content-reservation/raw/master/images/readme/node_specific_settings.jpg)
-![adding an event](https://github.com/ameerkat/drupal-content-reservation/tree/master/images/readme/add_an_event.jpg)
+![adding an event](https://github.com/ameerkat/drupal-content-reservation/raw/master/images/readme/add_an_event.jpg)
 
 ## Todo list
 
