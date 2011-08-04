@@ -21,7 +21,26 @@ recommended you set each content type to a seperate color so as to easily differ
 on a combined calendar.
 
 ![node specific settings](https://github.com/ameerkat/drupal-content-reservation/raw/master/images/readme/node_specific_settings.jpg)
+
+Basic usage is as follows, there are links on the left hand side leading to either a landing page (current under construction)
+or the default content type, the default content type is the only content type being reserved if the option 
+`Hide the Landing Page for Single Reservable Contents` is set. Once you select a content type or are directed
+to the page of the only reserved content type you are displayed a calendar of all reservations.
+
+![event calendar](https://github.com/ameerkat/drupal-content-reservation/raw/master/images/readme/event_calendar.jpg)
+
+Once you are at the calendar you can edit reservations by clicking on the events (if you have permissions). You can
+change the calendar view using the controls above the calendar. You can add a new event by selecting a specific node
+of the content type on the left hand side. Once you go to add an event you are displayed a form along side a calendar
+showing you the current reservations.
+
 ![adding an event](https://github.com/ameerkat/drupal-content-reservation/raw/master/images/readme/add_an_event.jpg)
+
+Once an event is submitted it is either added directly to the calendar or it is added to the moderation queue if it
+is enabled. Once in the queue a moderator (user with permissions `moderate reservations`), can either approve or 
+deny reservation requests.
+
+![moderation queue](https://github.com/ameerkat/drupal-content-reservation/raw/master/images/readme/moderation_queue.jpg)
 
 ## Todo list
 
