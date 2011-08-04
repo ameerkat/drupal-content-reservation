@@ -489,7 +489,7 @@ function content_reservation_reservation_create_form_submit($form, &$form_state)
 			$nid = $form_state['values']['node_id'];
 			$uid = $user->uid;
 			db_query("INSERT INTO {content_reservation} (nid, uid, description, start, end, status, created, modified) VALUES (%d, %d, '%s', '%s', '%s', %d, NOW(), NOW())", $nid, $uid, $description, $start, $end, $is_moderated ? ContentReservation::$CODE_CREATED : ContentReservation::$CODE_APPROVED);
-			drupal_set_message('Your reservation has been added.');
+			drupal_set_message($is_moderated ? 'Your event is added and waiting to be approved.' : 'Your event has been added.');
 		} else {
 			drupal_set_message($check[1], 'error');
 		}
@@ -514,7 +514,7 @@ function content_reservation_reservation_edit_form_submit($form, &$form_state){
 			$uid = $user->uid;
 			$rid = $form_state['values']['reservation_id'];
 			db_query("UPDATE {content_reservation} SET description='%s', start='%s', end='%s', modified=NOW(), status=%d WHERE rid = %d", $description, $start, $end, $is_moderated ? ContentReservation::$CODE_CREATED : ContentReservation::$CODE_APPROVED, $rid);
-			drupal_set_message('Event has been updated.');
+			drupal_set_message($is_moderated ? 'Your event is modified and waiting to be approved.' : 'Your event has been modified.');
 		} else {
 			drupal_set_message($check[1], 'error');
 		}
