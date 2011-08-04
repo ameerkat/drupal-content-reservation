@@ -227,17 +227,17 @@ function content_reservation_json($query_type, $query_key, $approved = true){
 	}
 	if ($query_type == 'type'){
 		$db_querystr = "SELECT * FROM {content_reservation}, {node} WHERE {node}.nid = {content_reservation}.nid".
-			" AND {node}.type = '%s' AND {content_reservation}.status = %d";
+			" AND {node}.type = '%s' AND ({content_reservation}.status = %d";
 	} else if ($query_type == 'nid'){
-		$db_querystr = "SELECT * FROM {content_reservation} WHERE nid = %d AND {content_reservation}.status = %d";
+		$db_querystr = "SELECT * FROM {content_reservation} WHERE nid = %d (AND {content_reservation}.status = %d";
 	} else if ($query_type == 'uid'){
-		$db_querystr = "SELECT * FROM {content_reservation} WHERE uid = %d AND {content_reservation}.status = %d";
+		$db_querystr = "SELECT * FROM {content_reservation} WHERE uid = %d (AND {content_reservation}.status = %d";
 	} else {
 		// If invalid query then return empty array
 		return "[]";
 	}
-	$result = db_query($db_querystr.$showpast_querystr, 
-		$query_key, $approved ? ContentReservation::$CODE_APPROVED : ContentReservation::$CODE_CREATED);
+	$result = db_query($db_querystr.($approved ? ")" : " OR {content_reservation}.status = %d)").$showpast_querystr, 
+		$query_key, $approved ? ContentReservation::$CODE_APPROVED : ContentReservation::$CODE_CREATED, ContentReservation::$CODE_APPROVED);
 	return content_reservation_make_json($result);
 }
 

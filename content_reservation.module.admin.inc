@@ -37,6 +37,11 @@ function content_reservation_admin(){
 		'#title' => t('Show Usernames on Calendar'),
 		'#description' => t('Append the user name to the calendar view information'),
 		'#default_value' => variable_get('content_reservation_showuser', 1));
+	$form['content_reservation_hidesinglelanding'] = array(
+		'#type' => 'checkbox',
+		'#title' => t('Hide the Landing Page for Single Reservable Contents'),
+		'#description' => t('Hide the landing page if only one content type has reservations, will default to that type'),
+		'#default_value' => variable_get('content_reservation_hidesinglelanding', 1));
 	return system_settings_form($form);
 }
 

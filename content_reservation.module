@@ -218,14 +218,35 @@ function content_reservation_reserve_idedit($mode = NULL, $key = NULL){
  *	the reservation id for the edit mode
  * @return string
  */
-function content_reservation_reserve($mode = "type", $key = NULL){
+function content_reservation_reserve($mode = "", $key = NULL){
 	if($mode == "type" ){
 		return content_reservation_reserve_type($key);
 	} else if ($mode == "id" || $mode == "edit"){
 		return content_reservation_reserve_idedit($mode, $key);
 	} else {
-		drupal_set_message("Invalid query mode $mode, must be one of type, id, edit", 'error');
-		return "";
+		if(variable_get('content_reservation_hidesinglelanding', 1)){
+			$result = db_query("SELECT {node}.type FROM {content_reservation}, {node} WHERE {node}.nid = {content_reservation}.nid AND {content_reservation}.status = %d",  ContentReservation::$CODE_APPROVED);
+			$single_type = true;
+			$type = "";
+			while ($row = db_fetch_object($result)) {
+				if($type == ""){
+					$type = $row->type;
+				} else if ($row->type != $type) {
+					$single_type = false;
+				}
+			}
+			if($single_type){
+				return content_reservation_reserve_type($type);
+			} else {
+				return "Landing Page Placeholder";
+			}
+		} else {
+			return "Landing Page Placeholder";
+			/*
+			drupal_set_message("Invalid query mode $mode, must be one of type, id, edit", 'error');
+			return "";
+			*/
+		}
 	}
 }
 
@@ -581,7 +602,7 @@ function content_reservation_menu() {
 	);
 	// Admin Menu
 	$items['admin/settings/content_reservation'] = array(
-		'title' => t('Content Reservation Administration'),
+		'title' => t('Content Reservation Configuration'),
 		'description' => t('Administration options for the content reservation module'),
 		'page callback' => 'drupal_get_form',
 		'page arguments' => array('content_reservation_admin'),

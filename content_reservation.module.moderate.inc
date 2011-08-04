@@ -46,7 +46,7 @@ function content_reservation_sendmodmail($rid, $status){
 	}
 }
 
-function content_reservation_moderate($mode = "type", $key = NULL, $action = NULL){
+function content_reservation_moderate($mode = "", $key = NULL, $action = NULL){
 	global $user, $base_url;
 	$module_path = drupal_get_path('module', 'content_reservation');
 	drupal_add_css($module_path.'/content-reservation.css');
@@ -54,7 +54,7 @@ function content_reservation_moderate($mode = "type", $key = NULL, $action = NUL
 	drupal_add_css($module_path.'/lib/fullcalendar/fullcalendar/fullcalendar.css');
 	drupal_add_js($module_path.'/lib/fullcalendar/fullcalendar/fullcalendar.js');
 	jquery_ui_add('ui.resizable');
-	if($mode == "type" ){
+	if($mode == "type"){
 		$content_type = $key;
 		if($content_type){
 			$content_list = array();
@@ -123,8 +123,33 @@ function content_reservation_moderate($mode = "type", $key = NULL, $action = NUL
 			}
 		}
 	} else {
-		drupal_set_message("Invalid query mode $mode, must be one of type, id", 'error');
-		return "";
+		if(variable_get('content_reservation_hidesinglelanding', 1)){
+			$result = db_query("SELECT {node}.type FROM {content_reservation}, {node} WHERE {node}.nid = {content_reservation}.nid AND {content_reservation}.status = %d",  ContentReservation::$CODE_CREATED);
+			$single_type = true;
+			$type = "";
+			while ($row = db_fetch_object($result)) {
+				if($type == ""){
+					$type = $row->type;
+				} else if ($row->type != $type) {
+					$single_type = false;
+				}
+			}
+			if($single_type){
+				if($type == ""){
+					return "No new content to be moderated";
+				} else {
+					return content_reservation_moderate("type", $type);
+				}
+			} else {
+				return "Moderation Landing Page Placeholder";
+			}
+		} else {
+			/*
+			drupal_set_message("Invalid query mode $mode, must be one of type, id", 'error');
+			return "";
+			*/
+			return "Moderation Landing Page Placholder";
+		}
 	}
 }
 

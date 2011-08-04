@@ -24,6 +24,9 @@ execute update_fc_jquery_fname(); somehow.
 * -Menu items
 * Usage documentation
 * Landing pages for the different available types
+* -Option to hide landing page if only one content type
+* Make moderation queue optional
+* Create tabbed environment for moderation queue
 * -Don't Allow Reservations in the Past
 * Pagination or scrolling style for events/moderation
 * Styles
