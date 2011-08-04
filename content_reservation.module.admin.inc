@@ -42,6 +42,11 @@ function content_reservation_admin(){
 		'#title' => t('Hide the Landing Page for Single Reservable Contents'),
 		'#description' => t('Hide the landing page if only one content type has reservations, will default to that type'),
 		'#default_value' => variable_get('content_reservation_hidesinglelanding', 1));
+	$form['content_reservation_enablemoderation'] = array(
+		'#type' => 'checkbox',
+		'#title' => t('Enable the Moderation Queue'),
+		'#description' => t('Enable the moderation queue and content reservation moderations. You might have to refresh the menu cache on enabling/disabling this option.'),
+		'#default_value' => variable_get('content_reservation_enablemoderation', 0));
 	return system_settings_form($form);
 }
 

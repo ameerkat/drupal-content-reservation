@@ -47,6 +47,9 @@ function content_reservation_sendmodmail($rid, $status){
 }
 
 function content_reservation_moderate($mode = "", $key = NULL, $action = NULL){
+	if(!variable_get('content_reservation_enablemoderation', 0)){
+		return "Moderation queue not enabled (see administrative section)";
+	}
 	global $user, $base_url;
 	$module_path = drupal_get_path('module', 'content_reservation');
 	drupal_add_css($module_path.'/content-reservation.css');

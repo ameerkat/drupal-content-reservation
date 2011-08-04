@@ -474,6 +474,7 @@ function content_reservation_reservation_edit_form_validate($form, &$form_state)
  * Implementation of the reservation form submit handler
  */
 function content_reservation_reservation_create_form_submit($form, &$form_state){
+	$is_moderated = variable_get('content_reservation_enablemoderation', 0);
 	// For some reason we got double posts so I'm going to check for validity here
 	if(isset($form_state['values']['start']) &&
 		isset($form_state['values']['end']) &&
@@ -487,7 +488,7 @@ function content_reservation_reservation_create_form_submit($form, &$form_state)
 			$description = $form_state['values']['description'];
 			$nid = $form_state['values']['node_id'];
 			$uid = $user->uid;
-			db_query("INSERT INTO {content_reservation} (nid, uid, description, start, end, status, created, modified) VALUES (%d, %d, '%s', '%s', '%s', %d, NOW(), NOW())", $nid, $uid, $description, $start, $end, ContentReservation::$CODE_CREATED);
+			db_query("INSERT INTO {content_reservation} (nid, uid, description, start, end, status, created, modified) VALUES (%d, %d, '%s', '%s', '%s', %d, NOW(), NOW())", $nid, $uid, $description, $start, $end, $is_moderated ? ContentReservation::$CODE_CREATED : ContentReservation::$CODE_APPROVED);
 			drupal_set_message('Your reservation has been added.');
 		} else {
 			drupal_set_message($check[1], 'error');
@@ -498,6 +499,7 @@ function content_reservation_reservation_create_form_submit($form, &$form_state)
 function content_reservation_reservation_edit_form_submit($form, &$form_state){
 	// For some reason we got double posts so I'm going to check for validity here
 	// May be unneccesary
+	$is_moderated = variable_get('content_reservation_enablemoderation', 0);
 	if(isset($form_state['values']['start']) &&
 		isset($form_state['values']['end']) &&
 		isset($form_state['values']['description'])){
@@ -511,7 +513,7 @@ function content_reservation_reservation_edit_form_submit($form, &$form_state){
 			$description = $form_state['values']['description'];
 			$uid = $user->uid;
 			$rid = $form_state['values']['reservation_id'];
-			db_query("UPDATE {content_reservation} SET description='%s', start='%s', end='%s', modified=NOW(), status=%d WHERE rid = %d", $description, $start, $end, ContentReservation::$CODE_CREATED, $rid);
+			db_query("UPDATE {content_reservation} SET description='%s', start='%s', end='%s', modified=NOW(), status=%d WHERE rid = %d", $description, $start, $end, $is_moderated ? ContentReservation::$CODE_CREATED : ContentReservation::$CODE_APPROVED, $rid);
 			drupal_set_message('Event has been updated.');
 		} else {
 			drupal_set_message($check[1], 'error');
@@ -586,13 +588,15 @@ function content_reservation_menu() {
 		'access arguments' => array('view reservations'),
 		'type' => MENU_NORMAL_ITEM,
 	);
-	$items['reservations/m'] = array(
-		'title' => t('Reservations Moderation Queue'),
-		'description' => t('Provides a list of content awaiting approval by a moderator'),
-		'page callback'=> 'content_reservation_moderate',
-		'access arguments' => array('moderate reservations'),
-		'type' => MENU_NORMAL_ITEM,
-	);
+	if(variable_get('content_reservation_enablemoderation', 0)){
+		$items['reservations/m'] = array(
+			'title' => t('Reservations Moderation Queue'),
+			'description' => t('Provides a list of content awaiting approval by a moderator'),
+			'page callback'=> 'content_reservation_moderate',
+			'access arguments' => array('moderate reservations'),
+			'type' => MENU_NORMAL_ITEM,
+		);
+	}
 	$items['reservations/j'] = array(
 		'title' => t('Reservations JSON'),
 		'description' => t('Returns reservation information wrapped in json'),
