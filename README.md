@@ -2,7 +2,7 @@
 
 ## Installation Notes
 If you download the latest dev version there is no fullcalendar, you have
-to install it separately see the notes in /lib/README, if you download a release
+to install it separately see the notes in `/lib/README`, if you download a release
 then it is included.
 
 The calendar display uses a higher version of jquery and is incompatible with 
@@ -21,6 +21,7 @@ recommended you set each content type to a seperate color so as to easily differ
 on a combined calendar.
 
 ![node specific settings](https://github.com/ameerkat/drupal-content-reservation/raw/master/images/readme/node_specific_settings.jpg)
+![adding an event](https://github.com/ameerkat/drupal-content-reservation/tree/master/images/readme/add_an_event.jpg)
 
 ## Todo list
 
