@@ -17,7 +17,7 @@ The content reservation module has many options on the admin page at `admin/sett
 in addition there are content specific options available at the bottom of each content page, if you
 have the appropriate permissions (`administer reservations`). These content specific options let you set 
 the time granularity for each reservable content, as well as the color it shows up on the calendar. It is
-recommended you set each content type to a seperate color so as to easily differentiate them when displayed
+recommended you set each content type to a separate color so as to easily differentiate them when displayed
 on a combined calendar.
 
 ![node specific settings](https://github.com/ameerkat/drupal-content-reservation/raw/master/images/readme/node_specific_settings.jpg)
